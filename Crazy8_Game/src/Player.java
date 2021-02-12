@@ -1,6 +1,7 @@
 //package com.a1.yahtzeeGame;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -25,6 +26,12 @@ public class Player implements Serializable {
 	Game game = new Game();
 	//delete this in the future
 	private int[] scoreSheet = new int[15];
+	
+	//new variables needed for each player
+	private int score = 0;
+	private ArrayList<String> playerHand = new ArrayList<>(52);
+	private int numCardsInHand = 0;
+	
 	
 	
 	
@@ -213,7 +220,10 @@ public class Player implements Serializable {
 
 	public void startGame() {
 		// receive players once for names
-		players = clientConnection.receivePlayer();
+
+		//players = clientConnection.receivePlayer();
+		clientConnection.receiveInitalHand();
+		printPlayerHand();
 		while (true) {
 			int round = clientConnection.receiveRoundNo();
 			if (round == -1)
@@ -253,6 +263,30 @@ public class Player implements Serializable {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public void addCard(String c) {
+		this.playerHand.add(c);
+		this.numCardsInHand = this.numCardsInHand + 1;
+	}
+	
+	public void addToScore(int s) {
+		this.score = this.score + s;
+	}
+	
+	public ArrayList<String> getHand(){
+		return this.playerHand;
+	}
+	
+	public int getNumCardsInHand(){
+		return this.numCardsInHand;
+	}
+	
+	public void printPlayerHand() {
+		System.out.print("Cards in player " + name + "'s hand are: ");
+		for (int i = 0; i < playerHand.size(); i++) {
+			System.out.print(playerHand.get(i) +  " ");
+		}
 	}
 
 	private class Client {
@@ -394,6 +428,21 @@ public class Player implements Serializable {
 				e.printStackTrace();
 			}
 			return 0;
+		}
+		
+		public void receiveInitalHand() {
+			System.out.println("Receiving the intial hand");
+			try {
+				for (int i = 0; i < 5; i++) {
+					addCard(dIn.readUTF());
+				}
+			System.out.println("FINSIHED RECEVING INITIAL HAND");
+
+			} 
+			catch (IOException e) {
+				System.out.println("Score sheet not received");
+				e.printStackTrace();
+			}
 		}
 
 	}

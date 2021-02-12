@@ -6,6 +6,8 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.Random;
 
 public class GameServer implements Serializable {
 
@@ -23,6 +25,17 @@ public class GameServer implements Serializable {
 
 	Game game = new Game();
 	int numPlayers;
+	
+	//new variables added
+	CardDeck gameDeck = new CardDeck();
+	boolean directionCC = true;        //clockwise direction of play by default
+	boolean skipNextTurn = false;      //to handle case of queen
+	boolean twoCase = false;           //to handle if last card was 2
+	boolean isWinner = false;
+	
+	String topCard;
+	int gameNum = 0;
+	int currentPlayerTurnId = 1;
 
 	public static void main(String args[]) throws Exception {
 		GameServer sr = new GameServer();
@@ -87,19 +100,54 @@ public class GameServer implements Serializable {
 	}
 
 	public void gameLoop() {
+		//first look to send a player their cards
+		for (int x = 0; x < 5; x++) {
+			for(int y = 0; y < players.length; y++) {
+				players[y].addCard(takeCardFromTopOfDeck());
+			}
+		}
+		
 		try {
-			playerServer[0].sendPlayers(players);
-			playerServer[1].sendPlayers(players);
-			playerServer[2].sendPlayers(players);
-			playerServer[3].sendPlayers(players);
 
-			while (turnsMade < maxTurns) {
+			//playerServer[0].sendPlayers(players);
+			//playerServer[1].sendPlayers(players);
+			//playerServer[2].sendPlayers(players);
+			//playerServer[3].sendPlayers(players);
+			System.out.println("SERVER SENDING HANDS TO PLAYERS");
+			playerServer[0].sendInitalHand(players[0]);
+			//System.out.println("Server hand of : " + players[0].name + " : ");
+			//players[0].printPlayerHand();
+			playerServer[1].sendInitalHand(players[1]);
+			//System.out.println("Server hand of : " + players[1].name + " : ");
+			//players[1].printPlayerHand();
+			playerServer[2].sendInitalHand(players[2]);
+			//System.out.println("Server hand of : " + players[2].name + " : ");
+			//players[2].printPlayerHand();
+			playerServer[3].sendInitalHand(players[3]);
+			//System.out.println("Server hand of : " + players[3].name + " : ");
+			//players[3].printPlayerHand();
+			
+			//System.out.println("There are this many cards left in the extra deck: " + gameDeck.deck.size());
+			//generate the top card to start play and make sure it is not 2
+	        do {
+	            topCard = takeCardFromTopOfDeck();
+
+	            // Up card cannot be an "8". Throw it back in the deck somewhere.
+	            if (topCard.charAt(0) == '8') {
+	                // Randomly place somewhere back in the deck
+	                Random rand = new Random();
+	                gameDeck.deck.add(rand.nextInt(gameDeck.deck.size()), topCard);
+	            }
+	        } while (topCard.charAt(0) == '8');
+	        
+	        System.out.println("THE STARTING TOP card is: " + topCard);
+			while (!isWinner) {
 
 				turnsMade++;
 				
 				// send the round number
 				System.out.println("*****************************************");
-				System.out.println("Round number " + turnsMade);
+				System.out.println("Turn Number " + turnsMade);
 				playerServer[0].sendTurnNo(turnsMade);
 				playerServer[0].sendScores(players);
 				players[0].setScoreSheet(playerServer[0].receiveScores());
@@ -142,6 +190,12 @@ public class GameServer implements Serializable {
 		}
 
 	}
+	
+    public String takeCardFromTopOfDeck() {
+        String card = gameDeck.deck.get(0);
+        gameDeck.deck.remove(0);
+        return card;
+    }
 
 	public class Server implements Runnable {
 		private Socket socket;
@@ -239,7 +293,20 @@ public class GameServer implements Serializable {
 				e.printStackTrace();
 			}
 		}
-
+		
+		public void sendInitalHand(Player pl) {
+			try {
+				ArrayList<String> tempHand = pl.getHand();
+				//here send each card to the player thread
+				for (int i = 0; i < pl.getNumCardsInHand(); i++) {
+					dOut.writeUTF(tempHand.get(i));;
+				}
+				dOut.flush();
+			} catch (Exception e) {
+				System.out.println("Intial Cards not sent to player");
+				e.printStackTrace();
+			}
+		}
 	}
 
 }

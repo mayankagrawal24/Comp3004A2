@@ -3,7 +3,7 @@ import java.util.Collections;
 
 public class CardDeck {
 
-    private ArrayList<String> deck;
+    public ArrayList<String> deck;
     //private String symbol;
 
     /**
@@ -26,7 +26,7 @@ public class CardDeck {
      * @param type Heart, spade, diamond, or club
      * @param value 2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, or Ace
      */
-    private CardDeck() {
+    public CardDeck() {
     	createDeck();
     }
 
@@ -52,16 +52,23 @@ public class CardDeck {
         Collections.shuffle(deck);
 
     }
-
-
+    
    
     public static void main(String args[]) {
     	CardDeck deck = new CardDeck();
     	for (int i = 0 ; i < deck.deck.size(); i++) {
     		System.out.println(deck.deck.get(i));
+    		if (deck.deck.get(i).charAt(0) == '8') {
+    			System.out.print("VALUE IS 8");
+    		}
     	}
     	
-    	//System.out.println("SIZE:L " + deck.deck.size());
+        String card = deck.deck.get(0);
+        deck.deck.remove(0);
+    	
+        System.out.println("Card Removed: " + card);
+    	System.out.println("SIZE:L " + deck.deck.size());
+    	
     	
     }
 }
