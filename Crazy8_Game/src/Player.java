@@ -225,6 +225,8 @@ public class Player implements Serializable {
 		clientConnection.receiveInitalHand();
 		printPlayerHand();
 		while (true) {
+			clientConnection.receiveNewTurnMessage();
+			//turnMessage.printGameMessage();
 			int round = clientConnection.receiveRoundNo();
 			if (round == -1)
 				break;
@@ -441,6 +443,24 @@ public class Player implements Serializable {
 			} 
 			catch (IOException e) {
 				System.out.println("Score sheet not received");
+				e.printStackTrace();
+			}
+		}
+		
+		public void receiveNewTurnMessage() {
+			System.out.println("\n\nReceiving the New Turn Message");
+			GameMessage tempMessage;
+			try {
+					tempMessage = (GameMessage) dIn.readObject();
+					tempMessage.printGameMessage();
+
+			} 
+			catch (IOException e) {
+				System.out.println("Score sheet not received");
+				e.printStackTrace();
+			}
+			catch (ClassNotFoundException e) {
+				System.out.println("class not found");
 				e.printStackTrace();
 			}
 		}

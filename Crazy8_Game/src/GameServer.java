@@ -35,7 +35,8 @@ public class GameServer implements Serializable {
 	
 	String topCard;
 	int gameNum = 0;
-	int currentPlayerTurnId = 1;
+	int currentPlayerTurnIndex = 1;
+	GameMessage message = new GameMessage();
 
 	public static void main(String args[]) throws Exception {
 		GameServer sr = new GameServer();
@@ -148,6 +149,16 @@ public class GameServer implements Serializable {
 				// send the round number
 				System.out.println("*****************************************");
 				System.out.println("Turn Number " + turnsMade);
+				
+				
+				//send the turn info to all players
+				for (int i = 0; i < players.length; i++) {
+					message.setGameMessage(topCard, players[i].getHand(), players[currentPlayerTurnIndex].name, currentDirectionStr());
+					playerServer[i].sendNewTurnMessage();
+				}
+				
+				//send info to the specific player to play their turn
+				
 				playerServer[0].sendTurnNo(turnsMade);
 				playerServer[0].sendScores(players);
 				players[0].setScoreSheet(playerServer[0].receiveScores());
@@ -195,6 +206,33 @@ public class GameServer implements Serializable {
         String card = gameDeck.deck.get(0);
         gameDeck.deck.remove(0);
         return card;
+    }
+    
+    public String currentDirectionStr() {
+    	if (directionCC) {
+    		return "Left";
+    	}
+    	return "Right";
+    }
+    
+    public void updateCurrentPlayerIndex() {
+    	if (directionCC) {
+    		if(currentPlayerTurnIndex < 3) {
+    			currentPlayerTurnIndex++;
+    		}
+    		else {
+    			currentPlayerTurnIndex = 0;
+    		}
+    	}
+    	else {
+    		if(currentPlayerTurnIndex > 0) {
+    			currentPlayerTurnIndex--;
+    		}
+    		else {
+    			currentPlayerTurnIndex = 3;
+    		}
+    	}
+    	
     }
 
 	public class Server implements Runnable {
@@ -302,8 +340,21 @@ public class GameServer implements Serializable {
 					dOut.writeUTF(tempHand.get(i));;
 				}
 				dOut.flush();
-			} catch (Exception e) {
+			} 
+			catch (Exception e) {
 				System.out.println("Intial Cards not sent to player");
+				e.printStackTrace();
+			}
+		}
+		
+		public void sendNewTurnMessage() {
+			try {
+					dOut.writeObject(message);
+					dOut.flush();
+				
+			} 
+			catch (Exception e) {
+				System.out.println("Could not send new Turn message to all players");
 				e.printStackTrace();
 			}
 		}
