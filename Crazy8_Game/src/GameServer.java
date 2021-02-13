@@ -35,7 +35,7 @@ public class GameServer implements Serializable {
 	
 	String topCard;
 	int gameNum = 0;
-	int currentPlayerTurnIndex = 1;
+	int currentPlayerTurnIndex = 0;
 	GameMessage message = new GameMessage();
 
 	public static void main(String args[]) throws Exception {
@@ -158,6 +158,24 @@ public class GameServer implements Serializable {
 				}
 				
 				//send info to the specific player to play their turn
+				if(skipNextTurn) {
+					
+				}
+				else if(twoCase) {
+					
+				}
+				else {
+					playerServer[currentPlayerTurnIndex].sendStartTurnState(1);
+					//add some kind of receive
+					String newTopCard = playerServer[currentPlayerTurnIndex].receiveNewTopCard();
+				}
+				
+				//send not your turn state to remaining players
+				for (int i = 0; i < players.length; i++) {
+					if (i != currentPlayerTurnIndex) {
+						playerServer[i].sendStartTurnState(0);
+					}
+				}
 				
 				playerServer[0].sendTurnNo(turnsMade);
 				playerServer[0].sendScores(players);
@@ -357,6 +375,28 @@ public class GameServer implements Serializable {
 				System.out.println("Could not send new Turn message to all players");
 				e.printStackTrace();
 			}
+		}
+		
+		public void sendStartTurnState(int state) {
+			try {
+				dOut.writeInt(state);
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send State to current player");
+				e.printStackTrace();
+			}
+		}
+		
+		public String receiveNewTopCard() {
+			try {
+				return (String) dIn.readUTF();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send State to current player");
+				e.printStackTrace();
+			}
+			return "";
 		}
 	}
 

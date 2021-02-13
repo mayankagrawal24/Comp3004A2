@@ -33,4 +33,6 @@ public class GameMessage implements Serializable {
 		System.out.println("\n");
 		
 	}
+	
+	public String getTopCard() {return currentTopCard;}
 }

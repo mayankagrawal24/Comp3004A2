@@ -2,11 +2,13 @@
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.Collections;
 
 public class Player implements Serializable {
 
@@ -219,25 +221,24 @@ public class Player implements Serializable {
 	}
 
 	public void startGame() {
-		// receive players once for names
-
+		Scanner input = new Scanner(System.in);
 		//players = clientConnection.receivePlayer();
 		clientConnection.receiveInitalHand();
 		printPlayerHand();
 		while (true) {
 			clientConnection.receiveNewTurnMessage();
-			//turnMessage.printGameMessage();
-			int round = clientConnection.receiveRoundNo();
-			if (round == -1)
-				break;
-			System.out.println("\n \n \n ********Round Number " + round + "********");
-			int[][] pl = clientConnection.receiveScores();
-			for (int i = 0; i < 3; i++) {
-				players[i].setScoreSheet(pl[i]);
+			int currentState = clientConnection.receiveStartTurnState();
+			
+			//play a normal round there was no special case in the last round
+			if (currentState == 1) {
+				System.out.println(getHandAndChoices());
+				int userChoice = input.nextInt();
+				boolean validPlay = false;
 			}
-			printPlayerScores(players);
-			int[] dieRoll = game.rollDice();
-			clientConnection.sendScores(playRound(dieRoll));
+			else if(currentState == 0) {
+				//do nothing as you are not playing this turn
+			}
+			
 		}
 
 	}
@@ -290,6 +291,36 @@ public class Player implements Serializable {
 			System.out.print(playerHand.get(i) +  " ");
 		}
 	}
+	
+    public String getHandAndChoices() {
+        String niceHand = "Your hand ...... ";
+        ArrayList<Integer> lengths = new ArrayList<>();
+
+        // Row 1
+        for (int i = 0; i < this.playerHand.size(); i++) {
+            niceHand += this.playerHand.get(i) + ",  ";
+            lengths.add(this.playerHand.get(i).length());
+        }
+        niceHand = niceHand.substring(0, niceHand.length() -3);
+        niceHand+= ", Draw a card.";
+        // Row 2
+        niceHand += "\nYour choices ... ";
+
+        for (int i = 0; i < lengths.size(); i++) {
+            int padding = lengths.get(i);
+
+            // One less space in formatting
+            if (i >= 10) {
+                niceHand = niceHand.substring(0, niceHand.length() -1);
+            }
+
+            niceHand += ("(" + (i) + ")")
+                    + String.join("", Collections.nCopies(padding, " "));
+        }
+        niceHand = niceHand.trim();
+        niceHand += "      (" + lengths.size() + ")";
+        return niceHand.trim();
+    }
 
 	private class Client {
 		Socket socket;
@@ -456,14 +487,26 @@ public class Player implements Serializable {
 
 			} 
 			catch (IOException e) {
-				System.out.println("Score sheet not received");
+				System.out.println("COULD NOT RECEIVE NEW TURN MESSAGE");
 				e.printStackTrace();
 			}
 			catch (ClassNotFoundException e) {
-				System.out.println("class not found");
+				System.out.println("Message class not found");
 				e.printStackTrace();
 			}
 		}
+		public int receiveStartTurnState() {
+			System.out.println("\n\nReceiving Start Turn State");
+			try {
+				return (int) dIn.readInt();
+			} 
+			catch (IOException e) {
+				System.out.println("Score sheet not received");
+				e.printStackTrace();
+			}
+			return -1;
+		}
+		
 
 	}
 
