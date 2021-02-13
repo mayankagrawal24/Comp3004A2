@@ -78,9 +78,12 @@ public class Player implements Serializable {
 			printPlayerHand();
 			int currentState = clientConnection.receiveStartTurnState();
 			
+			if (currentState == 2) {
+				
+			}
 			//play a normal round there was no special case in the last round
-			if (currentState == 1) {
-				playerHand.add("8D");
+			else if (currentState == 1 || currentState == 2) {
+				//playerHand.add("8D");
 				String newSuit = clientConnection.receiveNewSuit();
 				System.out.println(getHandAndChoices());
 				String topCard = newTurnMessage.getTopCard();
@@ -223,8 +226,17 @@ public class Player implements Serializable {
     	if (userCardChoice.charAt(0) == '8') {
     		return true;
     	}
-    	else if(newSuit != ""  && userCardChoice.charAt(1) == newSuit.charAt(0)) {
+    	else if(newSuit != ""  && userCardChoice.charAt(userCardChoice.length() - 1) == newSuit.charAt(0)) {
     		return true;
+    	}
+    	//bascially deal with 10
+    	else if (newSuit == "" && (userCardChoice.length() == 3 || topCard.length() == 3)) {
+    		if (userCardChoice.length() == topCard.length()) {
+    			return true;
+    		}
+    		else {
+    			return false;
+    		}
     	}
     	else if (newSuit == "" && (userCardChoice.charAt(0) == topCard.charAt(0) || userCardChoice.charAt(1) == topCard.charAt(1))) {
     		return true;

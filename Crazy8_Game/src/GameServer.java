@@ -156,25 +156,8 @@ public class GameServer implements Serializable {
 					playerServer[currentPlayerTurnIndex].sendStartTurnState(1);
 					playerServer[currentPlayerTurnIndex].sendNewSuit();
 					//add some kind of receive
-					String newTopCard = playerServer[currentPlayerTurnIndex].receiveNewTopCard();
-					String updatedNewSuit = playerServer[currentPlayerTurnIndex].receiveNewSuit();
-					System.out.println("The new top card received is " + newTopCard);
-					System.out.println("The new top SUIT received is " + updatedNewSuit);
-					if (newTopCard.charAt(0) == '1') {
-						System.out.println("CHANGING THE DIRECTION");
-						changeDirectionOfPlay();
-					}
+					updateServerInfoAfterPlayerTurn();
 					
-					else if (newTopCard.charAt(0) == 'Q') {
-						skipNextTurn = true;
-					}
-					
-					else if (newTopCard.charAt(0) == '2') {
-						
-					}
-					
-					this.topCard = newTopCard;
-					this.newSuit = updatedNewSuit;
 				}
 				
 				//send not your turn state to remaining players
@@ -229,6 +212,28 @@ public class GameServer implements Serializable {
     	else {
     		directionCC = true;
     	}
+    }
+    
+    public void updateServerInfoAfterPlayerTurn() {
+    	String newTopCard = playerServer[currentPlayerTurnIndex].receiveNewTopCard();
+		String updatedNewSuit = playerServer[currentPlayerTurnIndex].receiveNewSuit();
+		System.out.println("The new top card received is " + newTopCard);
+		System.out.println("The new top SUIT received is " + updatedNewSuit);
+		if (newTopCard.charAt(0) == '1' && newTopCard.charAt(1) != '0') {
+			System.out.println("CHANGING THE DIRECTION");
+			changeDirectionOfPlay();
+		}
+		
+		else if (newTopCard.charAt(0) == 'Q') {
+			skipNextTurn = true;
+		}
+		
+		else if (newTopCard.charAt(0) == '2') {
+			
+		}
+		
+		this.topCard = newTopCard;
+		this.newSuit = updatedNewSuit;
     }
 
 	public class Server implements Runnable {
