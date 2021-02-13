@@ -79,6 +79,7 @@ public class Player implements Serializable {
 			
 			//play a normal round there was no special case in the last round
 			if (currentState == 1) {
+				playerHand.add("QD");
 				System.out.println(getHandAndChoices());
 				String topCard = newTurnMessage.getTopCard();
 				boolean validPlay = false;
@@ -110,6 +111,9 @@ public class Player implements Serializable {
 				
 				//validate the users choice (bounds check & can play card on top card check)
 				
+			}
+			else if(currentState == 2) {
+				System.out.println("Last player played a queen! Your turn is being Skipped");
 			}
 			else if(currentState == 0) {
 				//do nothing as you are not playing this turn

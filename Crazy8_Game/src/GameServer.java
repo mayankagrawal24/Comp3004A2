@@ -125,8 +125,7 @@ public class GameServer implements Serializable {
 	                gameDeck.deck.add(rand.nextInt(gameDeck.deck.size()), topCard);
 	            }
 	        } while (topCard.charAt(0) == '8');
-	        
-	        topCard = "1H"; 
+	        topCard = "QH";
 	        System.out.println("THE STARTING TOP card is: " + topCard);
 			while (!isWinner) {
 
@@ -145,7 +144,8 @@ public class GameServer implements Serializable {
 				
 				//send info to the specific player to play their turn
 				if(skipNextTurn) {
-					
+					playerServer[currentPlayerTurnIndex].sendStartTurnState(2);
+					skipNextTurn = false;
 				}
 				else if(twoCase) {
 					
@@ -159,6 +159,15 @@ public class GameServer implements Serializable {
 						System.out.println("CHANGING THE DIRECTION");
 						changeDirectionOfPlay();
 					}
+					
+					else if (newTopCard.charAt(0) == 'Q') {
+						skipNextTurn = true;
+					}
+					
+					else if (newTopCard.charAt(0) == '2') {
+						
+					}
+					
 					this.topCard = newTopCard;
 					//players[currentPlayerTurnIndex].
 				}
