@@ -6,11 +6,13 @@ public class GameMessage implements Serializable {
 	private String currentTopCard;
 	private String currentPlayerName;
 	private String directionOfPlay;
+	private String suitOfEightCase;
 	
-	public GameMessage(String tCard, String currentPlayer, String direction) {
+	public GameMessage(String tCard, String currentPlayer, String direction, String suit) {
 		this.currentTopCard = tCard;
 		this.currentPlayerName = currentPlayer;
 		this.directionOfPlay = direction; 
+		this.suitOfEightCase = suit;
 	}
 	
 	public void setGameMessage(String tCard, String currentPlayer, String direction) {
@@ -23,7 +25,9 @@ public class GameMessage implements Serializable {
 		System.out.println("Current top card is: " + currentTopCard);
 		System.out.println("The direction of play is: " + directionOfPlay);
 		System.out.println("Whose turn it is : " + currentPlayerName);
-		//System.out.println("\n");
+		if(this.suitOfEightCase != "") {
+			System.out.println("New Suit Requested: " + suitOfEightCase);
+		}
 		
 	}
 	

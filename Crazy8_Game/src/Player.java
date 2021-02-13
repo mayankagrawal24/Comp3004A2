@@ -24,6 +24,7 @@ public class Player implements Serializable {
 	public String name;
 
 	int playerId = 0;
+	String suits[] = {"H", "S", "D", "C"};
 
 	Game game = new Game();
 	
@@ -79,26 +80,46 @@ public class Player implements Serializable {
 			
 			//play a normal round there was no special case in the last round
 			if (currentState == 1) {
-				playerHand.add("QD");
+				playerHand.add("8D");
+				String newSuit = clientConnection.receiveNewSuit();
 				System.out.println(getHandAndChoices());
 				String topCard = newTurnMessage.getTopCard();
 				boolean validPlay = false;
 				while (!validPlay) {
 					try {
 						int userChoice = input.nextInt();
-						if (isValidPlay(userChoice, topCard)) {
+						if (isValidPlay(userChoice, topCard, newSuit)) {
 							topCard = playerHand.get(userChoice);
 							playerHand.remove(userChoice);
-							if(topCard.charAt(0) == 8) {
-								System.out.println("HANDLE THE 8 CASE");
+							if(topCard.charAt(0) == '8') {
+								System.out.println("HANDLE THE 8 CASE Where user needs to pick the new suit");
+								System.out.println(getSuitsAndChoices());
+								 boolean validSuit = false;
+	                                do {
+	                                    try {
+	                                        newSuit = suits[input.nextInt()];
+	                                        validSuit = true;
+	                                    }
+	                                    catch (IndexOutOfBoundsException e) {
+	                                        System.out.println("Invalid selection. Please try again.");
+	                                    }
+	                                }
+	                                while (!validSuit);
+							}
+							else {
+								newSuit = "";
 							}
 							//send back the new top card and update the player hand on the server copy of player
-							
 							clientConnection.sendNewTopCard(topCard);
+							clientConnection.sendNewSuit(newSuit);
 							System.out.println("UPDaTED HAND AFTER TURN");
 							printPlayerHand();
 							//clientConnection.sendUpdatedPlayerHand(playerHand);
 							validPlay = true;
+						}
+						else if (userChoice == playerHand.size()) {
+							//they want to draw a card
+							System.out.println("USer wants to draw a card");
 						}
 						else {
 							System.out.println("You cannot play that card. Please try again.");
@@ -122,7 +143,6 @@ public class Player implements Serializable {
 		}
 
 	}
-
 	
 	public void addCard(String c) {
 		this.playerHand.add(c);
@@ -179,12 +199,34 @@ public class Player implements Serializable {
         return niceHand.trim();
     }
     
-    public boolean isValidPlay(int userIndex, String topCard) {
+    public String getSuitsAndChoices() {
+    	String choices = "Suits .......... ";
+    	for (int i = 0; i < suits.length; i++) {
+    		choices += " " + suits[i] + " , ";
+    	}
+    	choices = choices.substring(0, choices.length() - 2);
+    	choices += "\nYour choices ... ";
+        for (int i = 0; i < suits.length; i++) {
+            choices += ("(" + (i) + ")") + "  ";
+        }
+    	return choices;
+    }
+    
+    public boolean isValidPlay(int userIndex, String topCard, String newSuit) {
+    	
+    	if (userIndex == playerHand.size()) {
+    		return false;
+    	}
+    	
     	String userCardChoice = playerHand.get(userIndex);
-    	if (userCardChoice.charAt(0) == 8) {
+    	
+    	if (userCardChoice.charAt(0) == '8') {
     		return true;
     	}
-    	else if (userCardChoice.charAt(0) == topCard.charAt(0) || userCardChoice.charAt(1) == topCard.charAt(1)) {
+    	else if(newSuit != ""  && userCardChoice.charAt(1) == newSuit.charAt(0)) {
+    		return true;
+    	}
+    	else if (newSuit == "" && (userCardChoice.charAt(0) == topCard.charAt(0) || userCardChoice.charAt(1) == topCard.charAt(1))) {
     		return true;
     	}
     	return false;
@@ -248,7 +290,7 @@ public class Player implements Serializable {
 				dOut.writeUTF(str);
 				dOut.flush();
 			} catch (IOException ex) {
-				System.out.println("Player not sent");
+				System.out.println("newSuit not sent");
 				ex.printStackTrace();
 			}
 		}
@@ -319,6 +361,28 @@ public class Player implements Serializable {
 			}
 		}
 		
+		public String receiveNewSuit() {
+			System.out.println("\nReceiving The NEW Suit");
+			try {
+				return (String) dIn.readUTF();
+			} 
+			catch (IOException e) {
+				System.out.println("New Suit not received");
+				e.printStackTrace();
+			}
+			return "";
+		}
+		
+		public void sendNewSuit(String nSuit) {
+			System.out.println("Sending the new SUit to the server");
+			try {
+				dOut.writeUTF(nSuit);
+				dOut.flush();
+			} catch (IOException ex) {
+				System.out.println("New Suit NOT SENT");
+				ex.printStackTrace();
+			}
+		}
 
 	}
 

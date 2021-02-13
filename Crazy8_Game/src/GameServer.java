@@ -36,6 +36,7 @@ public class GameServer implements Serializable {
 	String topCard;
 	int gameNum = 0;
 	int currentPlayerTurnIndex = 0;
+	String newSuit = "";                      //used for when an 8 is played
 	//GameMessage message = new GameMessage();
 
 	public static void main(String args[]) throws Exception {
@@ -125,7 +126,7 @@ public class GameServer implements Serializable {
 	                gameDeck.deck.add(rand.nextInt(gameDeck.deck.size()), topCard);
 	            }
 	        } while (topCard.charAt(0) == '8');
-	        topCard = "QH";
+	        //topCard = "QH";
 	        System.out.println("THE STARTING TOP card is: " + topCard);
 			while (!isWinner) {
 
@@ -134,12 +135,13 @@ public class GameServer implements Serializable {
 				// send the round number
 				System.out.println("*****************************************");
 				System.out.println("Turn Number " + turnsMade);
+				System.out.println("THIS IS THE NEW SUIT: " + newSuit);
 				
 				
 				//send the turn info to all players
 				for (int i = 0; i < players.length; i++) {
 					//message.setGameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr());
-					playerServer[i].sendNewTurnMessage(new GameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr()));
+					playerServer[i].sendNewTurnMessage(new GameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr(), newSuit));
 				}
 				
 				//send info to the specific player to play their turn
@@ -152,9 +154,12 @@ public class GameServer implements Serializable {
 				}
 				else {
 					playerServer[currentPlayerTurnIndex].sendStartTurnState(1);
+					playerServer[currentPlayerTurnIndex].sendNewSuit();
 					//add some kind of receive
 					String newTopCard = playerServer[currentPlayerTurnIndex].receiveNewTopCard();
+					String updatedNewSuit = playerServer[currentPlayerTurnIndex].receiveNewSuit();
 					System.out.println("The new top card received is " + newTopCard);
+					System.out.println("The new top SUIT received is " + updatedNewSuit);
 					if (newTopCard.charAt(0) == '1') {
 						System.out.println("CHANGING THE DIRECTION");
 						changeDirectionOfPlay();
@@ -169,7 +174,7 @@ public class GameServer implements Serializable {
 					}
 					
 					this.topCard = newTopCard;
-					//players[currentPlayerTurnIndex].
+					this.newSuit = updatedNewSuit;
 				}
 				
 				//send not your turn state to remaining players
@@ -358,6 +363,29 @@ public class GameServer implements Serializable {
 				e.printStackTrace();
 			}
 			return "";
+		}
+		
+		public String receiveNewSuit() {
+			System.out.println("Receiving the new SUIT after players turn");
+			try {
+				return (String) dIn.readUTF();
+			}
+			catch (Exception e) {
+				System.out.println("Could not receive the new SUIT");
+				e.printStackTrace();
+			}
+			return "";
+		}
+		
+		public void sendNewSuit() {
+			try {
+				dOut.writeUTF(newSuit);
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send NewState to current player");
+				e.printStackTrace();
+			}
 		}
 	}
 
