@@ -17,14 +17,14 @@ public class CardDeck {
      * The different face values for each card
      */
     public static final String[] CARD_RANKS = {
-            "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"
+            "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K"
     };
 
     /**
      * Class constructor
      *
      * @param type Heart, spade, diamond, or club
-     * @param value 2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King, or Ace
+     * @param value 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King
      */
     public CardDeck() {
     	createDeck();

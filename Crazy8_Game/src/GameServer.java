@@ -36,7 +36,7 @@ public class GameServer implements Serializable {
 	String topCard;
 	int gameNum = 0;
 	int currentPlayerTurnIndex = 0;
-	GameMessage message = new GameMessage();
+	//GameMessage message = new GameMessage();
 
 	public static void main(String args[]) throws Exception {
 		GameServer sr = new GameServer();
@@ -107,28 +107,13 @@ public class GameServer implements Serializable {
 				players[y].addCard(takeCardFromTopOfDeck());
 			}
 		}
-		
-		try {
-
-			//playerServer[0].sendPlayers(players);
-			//playerServer[1].sendPlayers(players);
-			//playerServer[2].sendPlayers(players);
-			//playerServer[3].sendPlayers(players);
 			System.out.println("SERVER SENDING HANDS TO PLAYERS");
 			playerServer[0].sendInitalHand(players[0]);
-			//System.out.println("Server hand of : " + players[0].name + " : ");
-			//players[0].printPlayerHand();
 			playerServer[1].sendInitalHand(players[1]);
-			//System.out.println("Server hand of : " + players[1].name + " : ");
-			//players[1].printPlayerHand();
 			playerServer[2].sendInitalHand(players[2]);
-			//System.out.println("Server hand of : " + players[2].name + " : ");
-			//players[2].printPlayerHand();
 			playerServer[3].sendInitalHand(players[3]);
-			//System.out.println("Server hand of : " + players[3].name + " : ");
-			//players[3].printPlayerHand();
+
 			
-			//System.out.println("There are this many cards left in the extra deck: " + gameDeck.deck.size());
 			//generate the top card to start play and make sure it is not 2
 	        do {
 	            topCard = takeCardFromTopOfDeck();
@@ -141,6 +126,7 @@ public class GameServer implements Serializable {
 	            }
 	        } while (topCard.charAt(0) == '8');
 	        
+	        topCard = "1H"; 
 	        System.out.println("THE STARTING TOP card is: " + topCard);
 			while (!isWinner) {
 
@@ -153,8 +139,8 @@ public class GameServer implements Serializable {
 				
 				//send the turn info to all players
 				for (int i = 0; i < players.length; i++) {
-					message.setGameMessage(topCard, players[i].getHand(), players[currentPlayerTurnIndex].name, currentDirectionStr());
-					playerServer[i].sendNewTurnMessage();
+					//message.setGameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr());
+					playerServer[i].sendNewTurnMessage(new GameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr()));
 				}
 				
 				//send info to the specific player to play their turn
@@ -168,6 +154,13 @@ public class GameServer implements Serializable {
 					playerServer[currentPlayerTurnIndex].sendStartTurnState(1);
 					//add some kind of receive
 					String newTopCard = playerServer[currentPlayerTurnIndex].receiveNewTopCard();
+					System.out.println("The new top card received is " + newTopCard);
+					if (newTopCard.charAt(0) == '1') {
+						System.out.println("CHANGING THE DIRECTION");
+						changeDirectionOfPlay();
+					}
+					this.topCard = newTopCard;
+					//players[currentPlayerTurnIndex].
 				}
 				
 				//send not your turn state to remaining players
@@ -176,47 +169,9 @@ public class GameServer implements Serializable {
 						playerServer[i].sendStartTurnState(0);
 					}
 				}
-				
-				playerServer[0].sendTurnNo(turnsMade);
-				playerServer[0].sendScores(players);
-				players[0].setScoreSheet(playerServer[0].receiveScores());
-				System.out.println("Player 1 completed turn and their score is " + players[0].getScore());
+				updateCurrentPlayerIndex();
+			} 
 
-				playerServer[1].sendTurnNo(turnsMade);
-				playerServer[1].sendScores(players);
-				players[1].setScoreSheet(playerServer[1].receiveScores());
-				System.out.println("Player 2 completed turn and their score is " + players[1].getScore());
-
-				playerServer[2].sendTurnNo(turnsMade);
-				playerServer[2].sendScores(players);
-				players[2].setScoreSheet(playerServer[2].receiveScores());
-				System.out.println("Player 3 completed turn and their score is " + players[2].getScore());
-
-			}
-			// add the upper bonus
-			players[0].setScoreSheet(14, game.upperBonus(players[0].getUpperScore()));
-			players[1].setScoreSheet(14, game.upperBonus(players[1].getUpperScore()));
-			players[2].setScoreSheet(14, game.upperBonus(players[2].getUpperScore()));
-
-			playerServer[0].sendTurnNo(-1);
-			playerServer[1].sendTurnNo(-1);
-			playerServer[2].sendTurnNo(-1);
-
-			// send final score sheet after bonus added
-			playerServer[0].sendScores(players);
-			playerServer[1].sendScores(players);
-			playerServer[2].sendScores(players);
-
-			Player p = game.getWinner(players);
-			System.out.println("The winner is " + p.name);
-			for (int i = 0; i < playerServer.length; i++) {
-				playerServer[i].dOut.writeObject(p);
-				playerServer[i].dOut.flush();
-
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
 
 	}
 	
@@ -251,6 +206,15 @@ public class GameServer implements Serializable {
     		}
     	}
     	
+    }
+    
+    public void changeDirectionOfPlay() {
+    	if (directionCC == true) {
+    		directionCC = false;
+    	}
+    	else {
+    		directionCC = true;
+    	}
     }
 
 	public class Server implements Runnable {
@@ -336,25 +300,12 @@ public class GameServer implements Serializable {
 		/*
 		 * send scores of other players
 		 */
-		public void sendScores(Player[] pl) {
-			try {
-				for (int i = 0; i < pl.length; i++) {
-					for (int j = 0; j < pl[i].getScoreSheet().length; j++) {
-						dOut.writeInt(pl[i].getScoreSheet()[j]);
-					}
-				}
-				dOut.flush();
-			} catch (Exception e) {
-				System.out.println("Score sheet not sent");
-				e.printStackTrace();
-			}
-		}
-		
+
 		public void sendInitalHand(Player pl) {
 			try {
 				ArrayList<String> tempHand = pl.getHand();
 				//here send each card to the player thread
-				for (int i = 0; i < pl.getNumCardsInHand(); i++) {
+				for (int i = 0; i < tempHand.size(); i++) {
 					dOut.writeUTF(tempHand.get(i));;
 				}
 				dOut.flush();
@@ -365,7 +316,7 @@ public class GameServer implements Serializable {
 			}
 		}
 		
-		public void sendNewTurnMessage() {
+		public void sendNewTurnMessage(GameMessage message) {
 			try {
 					dOut.writeObject(message);
 					dOut.flush();
@@ -389,11 +340,12 @@ public class GameServer implements Serializable {
 		}
 		
 		public String receiveNewTopCard() {
+			System.out.println("Receiving the new Top card after players turn");
 			try {
 				return (String) dIn.readUTF();
 			}
 			catch (Exception e) {
-				System.out.println("Could not send State to current player");
+				System.out.println("Could not receive the new top card");
 				e.printStackTrace();
 			}
 			return "";
