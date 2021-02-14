@@ -1,4 +1,4 @@
-package main;
+package test;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -10,7 +10,7 @@ import java.net.Socket;
 import java.util.Scanner;
 import java.util.Collections;
 
-public class Player implements Serializable {
+public class Player_test implements Serializable {
 
 	/**
 	 * 
@@ -31,10 +31,10 @@ public class Player implements Serializable {
 	
 	static Client clientConnection;
 
-	Player[] players = new Player[4];
+	Player_test[] players = new Player_test[4];
 
 
-	public Player getPlayer() {
+	public Player_test getPlayer() {
 		return this;
 	}
 
@@ -59,7 +59,7 @@ public class Player implements Serializable {
 
 	public void initializePlayers() {
 		for (int i = 0; i < 4; i++) {
-			players[i] = new Player(" ");
+			players[i] = new Player_test(" ");
 		}
 	}
 	public void startGame() {
@@ -89,7 +89,7 @@ public class Player implements Serializable {
 		clientConnection.receiveInitalHand();
 		printPlayerHand();
 		while (!isRoundOverVal) {
-			GameMessage newTurnMessage = clientConnection.receiveNewTurnMessage();
+			GameMessage_test newTurnMessage = clientConnection.receiveNewTurnMessage();
 			newTurnMessage.printGameMessage();
 			printPlayerHand();
 			int currentState = clientConnection.receiveStartTurnState();
@@ -527,11 +527,11 @@ public class Player implements Serializable {
 			}
 		}
 		
-		public GameMessage receiveNewTurnMessage() {
+		public GameMessage_test receiveNewTurnMessage() {
 			//System.out.println("\n\nReceiving the New Turn Message");
-			GameMessage tempMessage = null;
+			GameMessage_test tempMessage = null;
 			try {
-					tempMessage = (GameMessage) dIn.readObject();
+					tempMessage = (GameMessage_test) dIn.readObject();
 					return tempMessage;
 
 			} 
@@ -756,7 +756,7 @@ public class Player implements Serializable {
 	/*
 	 * constructor takes the name of the player and sets the score to 0
 	 */
-	public Player(String n) {
+	public Player_test(String n) {
 		name = n;
 	}
 
@@ -764,7 +764,7 @@ public class Player implements Serializable {
 		Scanner myObj = new Scanner(System.in);
 		System.out.print("What is your name ? ");
 		String name = myObj.next();
-		Player p = new Player(name);
+		Player_test p = new Player_test(name);
 		p.initializePlayers();
 		p.connectToClient();
 		p.startGame();

@@ -1,4 +1,4 @@
-package main;
+package test;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
 
-public class GameServer implements Serializable {
+public class GameServer_test implements Serializable {
 
 	/**
 	 * 
@@ -20,7 +20,7 @@ public class GameServer implements Serializable {
 	private int maxTurns;
 
 	Server[] playerServer = new Server[4];
-	Player[] players = new Player[4];
+	Player_test[] players = new Player_test[4];
 
 	ServerSocket ss;
 
@@ -28,7 +28,7 @@ public class GameServer implements Serializable {
 	int numPlayers;
 	
 	//new variables added
-	CardDeck gameDeck;
+	CardDeck_test gameDeck;
 	boolean directionCC = true;        //clockwise direction of play by default
 	boolean skipNextTurn = false;      //to handle case of queen
 	boolean twoCase = false;           //to handle if last card was 2
@@ -44,20 +44,20 @@ public class GameServer implements Serializable {
 	//GameMessage message = new GameMessage();
 
 	public static void main(String args[]) throws Exception {
-		GameServer sr = new GameServer();
+		GameServer_test sr = new GameServer_test();
 
 		sr.acceptConnections();
 		sr.gameLoop();
 	}
 
-	public GameServer() {
+	public GameServer_test() {
 		System.out.println("Starting game server");
 		numPlayers = 0;
 		turnsMade = 0;
 		maxTurns = 13;
 		// initialize the players list with new players
 		for (int i = 0; i < players.length; i++) {
-			players[i] = new Player(" ");
+			players[i] = new Player_test(" ");
 		}
 
 		try {
@@ -86,7 +86,7 @@ public class GameServer implements Serializable {
 				server.dOut.flush();
 
 				// get the player name
-				Player in = (Player) server.dIn.readObject();
+				Player_test in = (Player_test) server.dIn.readObject();
 				System.out.println("Player " + server.playerId + " ~ " + in.name + " ~ has joined");
 				// add the player to the player list
 				players[server.playerId - 1] = in;
@@ -170,7 +170,7 @@ public class GameServer implements Serializable {
 		twoCase = false;
 		twoCaseNumCards = 0;
 		isWinner = false;
-		gameDeck = new CardDeck();
+		gameDeck = new CardDeck_test();
 		for (int x = 0; x < 5; x++) {
 			for(int y = 0; y < players.length; y++) {
 				players[y].addCard(takeCardFromTopOfDeck());
@@ -212,7 +212,7 @@ public class GameServer implements Serializable {
 				
 				//send the turn info to all players
 				for (int i = 0; i < players.length; i++) {
-					playerServer[i].sendNewTurnMessage(new GameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr(), newSuit));
+					playerServer[i].sendNewTurnMessage(new GameMessage_test(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr(), newSuit));
 				}
 				
 				//send info to the specific player to play their turn
@@ -338,8 +338,12 @@ public class GameServer implements Serializable {
 	}
 	
     public String takeCardFromTopOfDeck() {
-        String card = gameDeck.deck.get(0);
-        gameDeck.deck.remove(0);
+    	
+        //String card = gameDeck.deck.get(0);
+    	Scanner cardScanner = new Scanner(System.in);
+    	System.out.println("Enter the card you would like to force: ");
+    	String card = cardScanner.nextLine();
+        //gameDeck.deck.remove(0);
         return card;
     }
     
@@ -493,9 +497,9 @@ public class GameServer implements Serializable {
 		/*
 		 * send the scores to other players
 		 */
-		public void sendPlayers(Player[] pl) {
+		public void sendPlayers(Player_test[] pl) {
 			try {
-				for (Player p : pl) {
+				for (Player_test p : pl) {
 					dOut.writeObject(p);
 					dOut.flush();
 				}
@@ -525,7 +529,7 @@ public class GameServer implements Serializable {
 		 * send scores of other players
 		 */
 
-		public void sendInitalHand(Player pl) {
+		public void sendInitalHand(Player_test pl) {
 			try {
 				ArrayList<String> tempHand = pl.getHand();
 				//here send each card to the player thread
@@ -540,7 +544,7 @@ public class GameServer implements Serializable {
 			}
 		}
 		
-		public void sendNewTurnMessage(GameMessage message) {
+		public void sendNewTurnMessage(GameMessage_test message) {
 			try {
 					dOut.writeObject(message);
 					dOut.flush();

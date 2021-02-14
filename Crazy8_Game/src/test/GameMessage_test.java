@@ -1,15 +1,15 @@
-package main;
+package test;
 import java.io.Serializable;
 import java.util.ArrayList;
 
-public class GameMessage implements Serializable {
+public class GameMessage_test implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private String currentTopCard;
 	private String currentPlayerName;
 	private String directionOfPlay;
 	private String suitOfEightCase;
 	
-	public GameMessage(String tCard, String currentPlayer, String direction, String suit) {
+	public GameMessage_test(String tCard, String currentPlayer, String direction, String suit) {
 		this.currentTopCard = tCard;
 		this.currentPlayerName = currentPlayer;
 		this.directionOfPlay = direction; 

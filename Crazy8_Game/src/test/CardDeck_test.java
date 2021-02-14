@@ -1,8 +1,8 @@
-package main;
+package test;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class CardDeck {
+public class CardDeck_test {
 
     public ArrayList<String> deck;
     //private String symbol;
@@ -27,7 +27,7 @@ public class CardDeck {
      * @param type Heart, spade, diamond, or club
      * @param value 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, Jack, Queen, King
      */
-    public CardDeck() {
+    public CardDeck_test() {
     	createDeck();
     }
 
@@ -56,7 +56,7 @@ public class CardDeck {
     
    
     public static void main(String args[]) {
-    	CardDeck deck = new CardDeck();
+    	CardDeck_test deck = new CardDeck_test();
     	for (int i = 0 ; i < deck.deck.size(); i++) {
     		System.out.println(deck.deck.get(i));
     		if (deck.deck.get(i).charAt(0) == '8') {
