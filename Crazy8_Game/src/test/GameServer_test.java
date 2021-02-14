@@ -178,29 +178,26 @@ public class GameServer_test implements Serializable {
 //				players[y].addCard(takeCardFromTopOfDeck());
 //			}
 //		}
-			players[0].addCard("3C");
-			players[0].addCard("1H");
-			players[0].addCard("QC");
-			players[0].addCard("7H");
+			players[0].addCard("KH");
+			players[0].addCard("7C");
+			players[0].addCard("8H");
 			players[0].addCard("5S");
 			
-			players[1].addCard("3H");
-			players[1].addCard("1H");
-			players[1].addCard("QC");
-			players[1].addCard("7H");
-			players[1].addCard("3C");
+			players[1].addCard("KH");
+			players[1].addCard("7C");
+			players[1].addCard("8H");
+			players[1].addCard("5S");
 			
-			players[2].addCard("3C");
-			players[2].addCard("1H");
-			players[2].addCard("3H");
-			players[2].addCard("7H");
-			players[2].addCard("7S");
+			players[2].addCard("KH");
+			players[2].addCard("7C");
+			players[2].addCard("8H");
+			players[2].addCard("5S");
 			
-			players[3].addCard("3C");
-			players[3].addCard("1H");
-			players[3].addCard("QC");
-			players[3].addCard("7H");
-			players[3].addCard("9S");
+			players[3].addCard("KH");
+			players[3].addCard("7C");
+			players[3].addCard("8H");
+			players[3].addCard("5S");
+
 		
 			//System.out.println("SERVER SENDING HANDS TO PLAYERS")
 			playerServer[0].sendInitalHand(players[0]);
