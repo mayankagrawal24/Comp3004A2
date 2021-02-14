@@ -111,28 +111,29 @@ public class GameServer implements Serializable {
 			roundLoop();
 			//send the winner & scores to the players
 			String roundOverMsg = "";
-			roundOverMsg += ("SCORES FOR PLAYERS AFTER ROUND" + roundCounter + "\n");
+			roundOverMsg += ("Scores for all players after the round" + roundCounter + "\n");
 			for (int i = 0; i < players.length; i++) {
 				roundOverMsg +=(players[i].name + " : " + players[i].score);
 				roundOverMsg += "\n";
 			}
 			roundOverMsg += ("The winner of the round is: " + currentRoundWinner);
+			roundOverMsg += "\n";
 			
 			for (int i = 0; i < players.length; i++) {
 				playerServer[i].sendRoundOverMsg(roundOverMsg);
 			}
-			System.out.println("Finished sending round over MSGs");
+			//System.out.println("Finished sending round over MSGs");
 			
 			//tell players if there is another round 
 			if (isGameOver()) {
 				// tell the player to stop looping and display the game winner
 				for (int i = 0; i < players.length; i++) {
-					System.out.println("SENT ROUND STATE OF 1");
+					//System.out.println("SENT ROUND STATE OF 1");
 					playerServer[i].sendNewRoundState(1);
 				}
 				String winner = getGameWinner();
 				String gameOverMsg = "";
-				gameOverMsg += ("SCORES FOR PLAYERS AFTER GAME\n");
+				gameOverMsg += ("Scores for all players after game end\n");
 				for (int i = 0; i < players.length; i++) {
 					gameOverMsg +=(players[i].name + " : " + players[i].score);
 					gameOverMsg += "\n";
@@ -149,7 +150,7 @@ public class GameServer implements Serializable {
 			else {
 				//tell player to play another round
 				for (int i = 0; i < players.length; i++) {
-					System.out.println("SENT ROUND STATE OF 0");
+					//System.out.println("SENT ROUND STATE OF 0");
 					playerServer[i].sendNewRoundState(0);
 					players[i].clearPlayerHand();
 				}
@@ -175,13 +176,13 @@ public class GameServer implements Serializable {
 				players[y].addCard(takeCardFromTopOfDeck());
 			}
 		}
-			System.out.println("SERVER SENDING HANDS TO PLAYERS");
+			//System.out.println("SERVER SENDING HANDS TO PLAYERS");
 			//int choicdsddssd = input.nextInt();
 			playerServer[0].sendInitalHand(players[0]);
 			playerServer[1].sendInitalHand(players[1]);
 			playerServer[2].sendInitalHand(players[2]);
 			playerServer[3].sendInitalHand(players[3]);
-			System.out.println("Sent all inital Hands");
+			//System.out.println("Sent all inital Hands");
 			
 			//generate the top card to start play and make sure it is not 2
 	        do {
@@ -206,7 +207,7 @@ public class GameServer implements Serializable {
 				// send the round number
 				System.out.println("*****************************************");
 				System.out.println("Turn Number " + turnsMade);
-				System.out.println("THIS IS THE NEW SUIT: " + newSuit);
+				//System.out.println("THIS IS THE NEW SUIT: " + newSuit);
 				
 				
 				//send the turn info to all players
@@ -220,7 +221,7 @@ public class GameServer implements Serializable {
 					skipNextTurn = false;
 				}
 				else if(twoCase) {
-					System.out.println("TOP CARD IS a 2, NEED TO HANDLE");
+					//System.out.println("TOP CARD IS a 2, NEED TO HANDLE");
 					playerServer[currentPlayerTurnIndex].sendStartTurnState(3);
 					playerServer[currentPlayerTurnIndex].sendNewSuit();
 					playerServer[currentPlayerTurnIndex].sendTwoCaseNumCards(twoCaseNumCards);
@@ -244,12 +245,12 @@ public class GameServer implements Serializable {
 						int drawCardState = playerServer[currentPlayerTurnIndex].receiveDrawCardState();
 						
 						if (drawCardState == 0) {
-							System.out.println("NO REquest to draw");
+							//System.out.println("NO REquest to draw");
 							updateServerInfoAfterPlayerTurn();
 						}
 						//handle the draw request from the player.
 						else if(drawCardState == 1) {
-							System.out.println("WANT TO DRAW");
+							//System.out.println("WANT TO DRAW");
 							ArrayList<String> drawnCards = new ArrayList<String>(3);
 							for (int x = 0; x < 3; x++) {
 								String newCard = takeCardFromTopOfDeck();
@@ -275,12 +276,12 @@ public class GameServer implements Serializable {
 					int drawCardState = playerServer[currentPlayerTurnIndex].receiveDrawCardState();
 					
 					if (drawCardState == 0) {
-						System.out.println("NO REquest to draw");
+						//System.out.println("NO REquest to draw");
 						updateServerInfoAfterPlayerTurn();
 					}
 					//handle the draw request from the player.
 					else if(drawCardState == 1) {
-						System.out.println("WANT TO DRAW");
+						//System.out.println("WANT TO DRAW");
 						ArrayList<String> drawnCards = new ArrayList<String>(3);
 						for (int x = 0; x < 3; x++) {
 							String newCard = takeCardFromTopOfDeck();
@@ -297,12 +298,12 @@ public class GameServer implements Serializable {
 					
 				}
 				
-				System.out.println("Getting round overState");
+				//System.out.println("Getting round overState");
 				int roundOverState = playerServer[currentPlayerTurnIndex].receiveRoundOverState();
 				
 				//send not your turn state to remaining players
 				if (roundOverState == 0) {
-					System.out.println("SEnding that the round will continute state");
+					//System.out.println("SEnding that the round will continute state");
 					for (int i = 0; i < players.length; i++) {
 						if (i != currentPlayerTurnIndex) {
 							playerServer[i].sendStartTurnState(0);
@@ -314,14 +315,14 @@ public class GameServer implements Serializable {
 					for (int i = 0; i < players.length; i++) {
 						if (i != currentPlayerTurnIndex) {
 							//tell players to send back their scores
-							System.out.println("SENDING END ROUND STATE TO NOT YOUR TURN PLAYERS " + i);
+							//System.out.println("SENDING END ROUND STATE TO NOT YOUR TURN PLAYERS " + i);
 							playerServer[i].sendStartTurnState(4);
 							int playerNewScore = playerServer[i].receiveUpdatedPlayerScore();
 							players[i].score = playerNewScore;
 						}
 					}
 					
-					System.out.println("SCORES FOR PLAYERS AFTER ROUND 1");
+					//System.out.println("SCORES FOR PLAYERS AFTER ROUND 1");
 					for (int i = 0; i < players.length; i++) {
 						System.out.println(players[i].name + " : " + players[i].score);
 					}
@@ -446,7 +447,7 @@ public class GameServer implements Serializable {
     
     public String getGameWinner() {
     	String winner = "";
-    	int lowestScore = -1;
+    	int lowestScore = 1000;
     	for (int i = 0; i < players.length; i++) {
     		if (players[0].score < lowestScore) {
     			winner = players[i].name;
@@ -519,22 +520,6 @@ public class GameServer implements Serializable {
 			}
 		}
 
-		/*
-		 * receive scores of other players
-		 */
-		public int[] receiveScores() {
-			try {
-				int[] sc = new int[15];
-				for (int i = 0; i < 15; i++) {
-					sc[i] = dIn.readInt();
-				}
-				return sc;
-			} catch (Exception e) {
-				System.out.println("Score sheet not received");
-				e.printStackTrace();
-			}
-			return null;
-		}
 
 		/*
 		 * send scores of other players
@@ -568,7 +553,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendStartTurnState(int state) {
-			System.out.println("Sending start turn State");
+			//System.out.println("Sending start turn State");
 			try {
 				dOut.writeInt(state);
 				dOut.flush();
@@ -580,7 +565,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public String receiveNewTopCard() {
-			System.out.println("Receiving the new Top card after players turn");
+			//System.out.println("Receiving the new Top card after players turn");
 			try {
 				return (String) dIn.readUTF();
 			}
@@ -592,7 +577,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public String receiveNewSuit() {
-			System.out.println("Receiving the new SUIT after players turn");
+			//System.out.println("Receiving the new SUIT after players turn");
 			try {
 				return (String) dIn.readUTF();
 			}
@@ -604,7 +589,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendNewSuit() {
-			System.out.println("Sending New suit to current player");
+			//System.out.println("Sending New suit to current player");
 			try {
 				dOut.writeUTF(newSuit);
 				dOut.flush();
@@ -616,7 +601,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public int receiveDrawCardState() {
-			System.out.println("Receiving the Draw Card Request from player");
+			//System.out.println("Receiving the Draw Card Request from player");
 			try {
 				return (int) dIn.readInt();
 			}
@@ -642,7 +627,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public int receiveIsNewCard() {
-			System.out.println("Receiving Parameter that a new card was played");
+			//System.out.println("Receiving Parameter that a new card was played");
 			try {
 				return (int) dIn.readInt();
 			}
@@ -654,7 +639,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendTwoCaseNumCards(int numCards) {
-			System.out.println("Sending how many cards player needs to play for 2 case");
+			//System.out.println("Sending how many cards player needs to play for 2 case");
 			try {
 				dOut.writeInt(numCards);
 				dOut.flush();
@@ -666,7 +651,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public int receive2CardDrawState() {
-			System.out.println("Receieving State of 2 Card issue on Player");
+			//System.out.println("Receieving State of 2 Card issue on Player");
 			try {
 				return (int) dIn.readInt();
 			}
@@ -678,7 +663,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendDrawn2CaseCards(ArrayList<String> drawnCards) {
-			System.out.println("Sending 2 case drawn cards");
+			//System.out.println("Sending 2 case drawn cards");
 			try {
 				dOut.writeInt(drawnCards.size());
 				for(int i = 0; i < drawnCards.size(); i++) {
@@ -693,7 +678,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public int receiveRoundOverState() {
-			System.out.println("Receieving State of round over from current Player");
+			//System.out.println("Receieving State of round over from current Player");
 			try {
 				return (int) dIn.readInt();
 			}
@@ -705,7 +690,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public int receiveUpdatedPlayerScore() {
-			System.out.println("Receieving score of a losing Player");
+			//System.out.println("Receieving score of a losing Player");
 			try {
 				return (int) dIn.readInt();
 			}
@@ -717,7 +702,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendRoundOverMsg(String msg) {
-			System.out.println("Sending the Round over msg");
+			//System.out.println("Sending the Round over msg");
 			try {
 				dOut.writeUTF(msg);
 				dOut.flush();
@@ -729,7 +714,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendGameOverMsg(String msg) {
-			System.out.println("Sending the Game over msg");
+			//System.out.println("Sending the Game over msg");
 			try {
 				dOut.writeUTF(msg);
 				dOut.flush();
@@ -741,7 +726,7 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendNewRoundState(int state) {
-			System.out.println("Sending the New round State");
+			//System.out.println("Sending the New round State");
 			try {
 				dOut.writeInt(state);
 				dOut.flush();

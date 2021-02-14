@@ -22,7 +22,7 @@ public class GameMessage implements Serializable {
 	}
 	
 	public void printGameMessage() {
-		System.out.println("Current top card is: " + currentTopCard);
+		System.out.println("\n\nCurrent top card is: " + currentTopCard);
 		System.out.println("The direction of play is: " + directionOfPlay);
 		System.out.println("Whose turn it is : " + currentPlayerName);
 		if(this.suitOfEightCase != "") {
