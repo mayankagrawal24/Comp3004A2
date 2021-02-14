@@ -78,103 +78,78 @@ public class Player implements Serializable {
 			printPlayerHand();
 			int currentState = clientConnection.receiveStartTurnState();
 			
+			//if top card was a 2
 			if (currentState == 3) {
+				playerHand.add("2D");
+				printPlayerHand();
+				String topCard2Case = newTurnMessage.getTopCard();
+				String newSuit2Case = clientConnection.receiveNewSuit();
+				int numCardsToPlay = clientConnection.receiveNumCardsFor2Case();
+				int currentValid = 0;
 				
+				for (int x = 0; x < playerHand.size(); x++) {
+					if(isValidPlay(x, topCard2Case, newSuit2Case)) {
+						currentValid++;
+					}
+				}
+				//get them to play the number of cards
+				if (currentValid >= numCardsToPlay) {
+					//send a state saying what is happening in the 2 case
+					System.out.println("WE DONT HAVE TO DRAW");
+					clientConnection.send2CaseState(0);
+					
+					String playedCard = "";
+					while (numCardsToPlay > 0) {
+						System.out.println("INSIDE LOOP");
+						System.out.println(getHandAndChoices());
+						boolean validPlay = false;
+						while (!validPlay) {
+							try {
+								int userChoice = input.nextInt();
+								if (isValidPlay(userChoice, topCard2Case, newSuit2Case)) {
+									playedCard = playerHand.get(userChoice);
+									playerHand.remove(userChoice);
+									numCardsToPlay--;
+									System.out.println("Removing " + playedCard);
+									validPlay = true;
+								}
+								else if (userChoice == playerHand.size()) {
+									System.out.println("Cannot draw Card");
+								}
+								else {
+									System.out.println("You cannot play that card. Please try again.");
+								}
+							}
+		                    catch (IndexOutOfBoundsException e) {
+		                        System.out.println("Invalid selection. Please try again.");
+		                    }
+						}
+					}
+					
+					//play the last card actually back to game and it will have effects
+					clientConnection.sendIsNewCard(0);
+					clientConnection.sendNewTopCard(playedCard);
+					clientConnection.sendNewSuit(newSuit2Case);
+					
+				}
+				//make them draw and play their turn
+				else {
+					System.out.println("WE HAVE TO DRAW");
+					clientConnection.send2CaseState(1);
+					clientConnection.receive2CaseCards();
+					
+					//now play regular turn
+					//printPlayerHand();
+					playNormalTurn(topCard2Case,"");
+				}
 			}
 			//play a normal round there was no special case in the last round
 			else if (currentState == 1) {
-				//playerHand.add("10D");
+				playerHand.add("2S");
 				String newSuit = clientConnection.receiveNewSuit();
-				System.out.println(getHandAndChoices());
 				String topCard = newTurnMessage.getTopCard();
-				boolean validPlay = false;
-				while (!validPlay) {
-					try {
-						int userChoice = input.nextInt();
-						if (isValidPlay(userChoice, topCard, newSuit)) {
-							topCard = playerHand.get(userChoice);
-							playerHand.remove(userChoice);
-							if(topCard.charAt(0) == '8') {
-								System.out.println("HANDLE THE 8 CASE Where user needs to pick the new suit");
-								System.out.println(getSuitsAndChoices());
-								 boolean validSuit = false;
-	                                do {
-	                                    try {
-	                                        newSuit = suits[input.nextInt()];
-	                                        validSuit = true;
-	                                    }
-	                                    catch (IndexOutOfBoundsException e) {
-	                                        System.out.println("Invalid selection. Please try again.");
-	                                    }
-	                                }
-	                                while (!validSuit);
-							}
-							else {
-								newSuit = "";
-							}
-							//send back the new top card and update the player hand on the server copy of player
-							clientConnection.sendStatetoDrawCard(0); // don't want to draw cards, turn is done
-							clientConnection.sendIsNewCard(0);
-							clientConnection.sendNewTopCard(topCard);
-							clientConnection.sendNewSuit(newSuit);
-							System.out.println("UPDaTED HAND AFTER TURN");
-							printPlayerHand();
-							//clientConnection.sendUpdatedPlayerHand(playerHand);
-							validPlay = true;
-						}
-						else if (userChoice == playerHand.size()) {
-							//they want to draw a card
-							int newCardPlayed = 1;
-							System.out.println("USer wants to draw a card");
-							//send a request to server to draw cards and get back a [] of strings with the cards.
-							clientConnection.sendStatetoDrawCard(1);
-							clientConnection.receiveDrawnCards();
-							System.out.println("Printing updated hand after drawing cards");
-							printPlayerHand();
-							
-							//now try and play the last card, if works then normal, otherwise say skipping turn 
-							if (isValidPlay(playerHand.size() - 1, topCard, newSuit)) {
-								topCard = playerHand.get(playerHand.size() - 1);
-								playerHand.remove(playerHand.size() - 1);
-								System.out.println("Must play " + topCard);
-								if(topCard.charAt(0) == '8') {
-									System.out.println("HANDLE THE 8 CASE Where user needs to pick the new suit");
-									System.out.println(getSuitsAndChoices());
-									 boolean validSuit = false;
-		                                do {
-		                                    try {
-		                                        newSuit = suits[input.nextInt()];
-		                                        validSuit = true;
-		                                    }
-		                                    catch (IndexOutOfBoundsException e) {
-		                                        System.out.println("Invalid selection. Please try again.");
-		                                    }
-		                                }
-		                                while (!validSuit);
-								}
-								else {
-									newSuit = "";
-								}
-								newCardPlayed = 0;
-							}
-							else {
-								System.out.println("Cannot play any of the drawn Cards! Skipping Turn");
-							}
-							clientConnection.sendIsNewCard(newCardPlayed);
-							clientConnection.sendNewTopCard(topCard);
-							clientConnection.sendNewSuit(newSuit);
-							validPlay = true;
-						}
-						else {
-							System.out.println("You cannot play that card. Please try again.");
-						}
-					}
-                    catch (IndexOutOfBoundsException e) {
-                        System.out.println("Invalid selection. Please try again.");
-                    }
-				}
-				
-				//validate the users choice (bounds check & can play card on top card check)
+				playNormalTurn(topCard, newSuit);
+
 				
 			}
 			else if(currentState == 2) {
@@ -243,6 +218,33 @@ public class Player implements Serializable {
         return niceHand.trim();
     }
     
+    public String getHandAndChoices2Case() {
+        String niceHand = "Your hand ...... ";
+        ArrayList<Integer> lengths = new ArrayList<>();
+
+        // Row 1
+        for (int i = 0; i < this.playerHand.size(); i++) {
+            niceHand += this.playerHand.get(i) + ",  ";
+            lengths.add(this.playerHand.get(i).length());
+        }
+        niceHand = niceHand.substring(0, niceHand.length() -3);
+        // Row 2
+        niceHand += "\nYour choices ... ";
+
+        for (int i = 0; i < lengths.size(); i++) {
+            int padding = lengths.get(i);
+
+            // One less space in formatting
+            if (i >= 10) {
+                niceHand = niceHand.substring(0, niceHand.length() -1);
+            }
+        }
+        niceHand = niceHand.trim();
+        niceHand += "      (" + lengths.size() + ")";
+        return niceHand.trim();
+    }
+  
+    
     public String getSuitsAndChoices() {
     	String choices = "Suits .......... ";
     	for (int i = 0; i < suits.length; i++) {
@@ -286,6 +288,99 @@ public class Player implements Serializable {
     		return true;
     	}
     	return false;
+    }
+    
+    public void playNormalTurn(String topCard, String newSuit) {
+    	Scanner input = new Scanner(System.in);
+		System.out.println(getHandAndChoices());
+		boolean validPlay = false;
+		while (!validPlay) {
+			try {
+				int userChoice = input.nextInt();
+				if (isValidPlay(userChoice, topCard, newSuit)) {
+					topCard = playerHand.get(userChoice);
+					playerHand.remove(userChoice);
+					if(topCard.charAt(0) == '8') {
+						System.out.println("HANDLE THE 8 CASE Where user needs to pick the new suit");
+						System.out.println(getSuitsAndChoices());
+						 boolean validSuit = false;
+                            do {
+                                try {
+                                    newSuit = suits[input.nextInt()];
+                                    validSuit = true;
+                                }
+                                catch (IndexOutOfBoundsException e) {
+                                    System.out.println("Invalid selection. Please try again.");
+                                }
+                            }
+                            while (!validSuit);
+					}
+					else {
+						newSuit = "";
+					}
+					//send back the new top card and update the player hand on the server copy of player
+					clientConnection.sendStatetoDrawCard(0); // don't want to draw cards, turn is done
+					clientConnection.sendIsNewCard(0);
+					clientConnection.sendNewTopCard(topCard);
+					clientConnection.sendNewSuit(newSuit);
+					System.out.println("UPDaTED HAND AFTER TURN");
+					printPlayerHand();
+					//clientConnection.sendUpdatedPlayerHand(playerHand);
+					validPlay = true;
+				}
+				else if (userChoice == playerHand.size()) {
+					//they want to draw a card
+					int newCardPlayed = 1;
+					System.out.println("USer wants to draw a card");
+					//send a request to server to draw cards and get back a [] of strings with the cards.
+					clientConnection.sendStatetoDrawCard(1);
+					clientConnection.receiveDrawnCards();
+					System.out.println("Printing updated hand after drawing cards");
+					printPlayerHand();
+					
+					//now try and play the last card, if works then normal, otherwise say skipping turn 
+					if (isValidPlay(playerHand.size() - 1, topCard, newSuit)) {
+						topCard = playerHand.get(playerHand.size() - 1);
+						playerHand.remove(playerHand.size() - 1);
+						System.out.println("Must play " + topCard);
+						if(topCard.charAt(0) == '8') {
+							System.out.println("HANDLE THE 8 CASE Where user needs to pick the new suit");
+							System.out.println(getSuitsAndChoices());
+							 boolean validSuit = false;
+                                do {
+                                    try {
+                                        newSuit = suits[input.nextInt()];
+                                        validSuit = true;
+                                    }
+                                    catch (IndexOutOfBoundsException e) {
+                                        System.out.println("Invalid selection. Please try again.");
+                                    }
+                                }
+                                while (!validSuit);
+						}
+						else {
+							newSuit = "";
+						}
+						newCardPlayed = 0;
+					}
+					else {
+						System.out.println("Cannot play any of the drawn Cards! Skipping Turn");
+					}
+					clientConnection.sendIsNewCard(newCardPlayed);
+					clientConnection.sendNewTopCard(topCard);
+					clientConnection.sendNewSuit(newSuit);
+					validPlay = true;
+				}
+				else {
+					System.out.println("You cannot play that card. Please try again.");
+				}
+			}
+            catch (IndexOutOfBoundsException e) {
+                System.out.println("Invalid selection. Please try again.");
+            }
+		}
+		
+		//validate the users choice (bounds check & can play card on top card check)
     }
 
 	private class Client {
@@ -481,7 +576,48 @@ public class Player implements Serializable {
 				ex.printStackTrace();
 			}
 		}
+		
+		public int receiveNumCardsFor2Case() {
+			System.out.println("\nRECEVING 2 CAse num cards");
+			try {
+				return (int) dIn.readInt();
+			} 
+			catch (IOException e) {
+				System.out.println("COULD NOT RECEive 2 CAse num cards");
+				e.printStackTrace();
+			}
+			return 2;
+		}
 
+		//0 is no drawing 
+		//1 is draw cards
+		public void send2CaseState(int state) {
+			System.out.println("Sending 2 CASE state to server");
+			try {
+				dOut.writeInt(state);
+				dOut.flush();
+			} catch (IOException ex) {
+				System.out.println("2 CASE state NOT SENT");
+				ex.printStackTrace();
+			}
+		}
+		
+		public void receive2CaseCards() {
+			System.out.println("\n2 Case Drawn Cards");
+			try {
+				int numCardsDrawn = (int) dIn.readInt();
+				String card = "";
+				for (int i = 0; i < numCardsDrawn; i++) {
+					card = (String) dIn.readUTF();
+					playerHand.add(card);
+					System.out.println("Drew " + card);
+				}
+			} 
+			catch (IOException e) {
+				System.out.println("2 Case drawn cards not received");
+				e.printStackTrace();
+			}
+		}
 	}
 
 	/*

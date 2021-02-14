@@ -31,6 +31,7 @@ public class GameServer implements Serializable {
 	boolean directionCC = true;        //clockwise direction of play by default
 	boolean skipNextTurn = false;      //to handle case of queen
 	boolean twoCase = false;           //to handle if last card was 2
+	int twoCaseNumCards = 0;
 	boolean isWinner = false;
 	
 	String topCard;
@@ -150,6 +151,58 @@ public class GameServer implements Serializable {
 					skipNextTurn = false;
 				}
 				else if(twoCase) {
+					System.out.println("TOP CARD IS a 2, NEED TO HANDLE");
+					playerServer[currentPlayerTurnIndex].sendStartTurnState(3);
+					playerServer[currentPlayerTurnIndex].sendNewSuit();
+					playerServer[currentPlayerTurnIndex].sendTwoCaseNumCards(twoCaseNumCards);
+					
+					//receive the state of the player for the 2 cards
+					int draw2CardState = playerServer[currentPlayerTurnIndex].receive2CardDrawState();
+					//take the new top card
+					System.out.println("2 case State from server is " + draw2CardState);
+					if (draw2CardState == 0) {
+						updateServerInfoAfterPlayerTurn();
+					}
+					//give 2 cards to player
+					else if(draw2CardState == 1) {
+						ArrayList<String> drawnCards2Case = new ArrayList<String>(10);
+						for (int x = 0; x < twoCaseNumCards; x++) {
+							String newCard = takeCardFromTopOfDeck();
+							drawnCards2Case.add(newCard);
+						}
+						playerServer[currentPlayerTurnIndex].sendDrawn2CaseCards(drawnCards2Case);
+						
+						//updateServerInfoAfterPlayerTurn();
+						
+						
+						
+						
+						
+						int drawCardState = playerServer[currentPlayerTurnIndex].receiveDrawCardState();
+						
+						if (drawCardState == 0) {
+							System.out.println("NO REquest to draw");
+							updateServerInfoAfterPlayerTurn();
+						}
+						//handle the draw request from the player.
+						else if(drawCardState == 1) {
+							System.out.println("WANT TO DRAW");
+							ArrayList<String> drawnCards = new ArrayList<String>(3);
+							for (int x = 0; x < 3; x++) {
+								String newCard = takeCardFromTopOfDeck();
+								drawnCards.add(newCard);
+								if (mustPlayCard(newCard, topCard, newSuit)) {
+									break;
+								}
+							}
+							
+							//send the drawn cards to the player
+							playerServer[currentPlayerTurnIndex].sendDrawnCards(drawnCards);
+							updateServerInfoAfterPlayerTurn();
+						}
+						
+					}
+					
 					
 				}
 				else {
@@ -251,11 +304,17 @@ public class GameServer implements Serializable {
 		}
 		
 		else if (newTopCard.charAt(0) == '2' && isNewCard == 0) {
-			
+			twoCase = true;
+			twoCaseNumCards += 2;
+		}
+		else if(newTopCard.charAt(0) != '2') {
+			twoCase = false;
+			twoCaseNumCards = 0;
 		}
 		
 		this.topCard = newTopCard;
 		this.newSuit = updatedNewSuit;
+		System.out.println("OUT OF UPDATING SERVER INFO");
     }
     
     public boolean mustPlayCard(String pulledCard, String topCard, String newSuit) {
@@ -479,6 +538,44 @@ public class GameServer implements Serializable {
 			return 0;
 		}
 		
+		public void sendTwoCaseNumCards(int numCards) {
+			System.out.println("Sending how many cards player needs to play for 2 case");
+			try {
+				dOut.writeInt(numCards);
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send num 2 cards to current player");
+				e.printStackTrace();
+			}
+		}
+		
+		public int receive2CardDrawState() {
+			System.out.println("Receieving State of 2 Card issue on Player");
+			try {
+				return (int) dIn.readInt();
+			}
+			catch (Exception e) {
+				System.out.println("Could not receive State of 2 Card issue on Player");
+				e.printStackTrace();
+			}
+			return 0;
+		}
+		
+		public void sendDrawn2CaseCards(ArrayList<String> drawnCards) {
+			System.out.println("Sending 2 case drawn cards");
+			try {
+				dOut.writeInt(drawnCards.size());
+				for(int i = 0; i < drawnCards.size(); i++) {
+					dOut.writeUTF(drawnCards.get(i));
+				}
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send the 2 case drawn cards");
+				e.printStackTrace();
+			}
+		}
 		
 	}
 
