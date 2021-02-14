@@ -12,11 +12,6 @@ import java.util.Collections;
 
 public class Player implements Serializable {
 
-	/*
-	 * score sheet is saved as a hashmap upper one, two, three, four, five, six
-	 * lower 3ok, 4ok, full, sst, lst, yahtzee, chance, lowerbonus, upperbonus
-	 */
-
 	/**
 	 * 
 	 */
@@ -29,9 +24,10 @@ public class Player implements Serializable {
 	Game game = new Game();
 	
 	//new variables needed for each player
-	private int score = 0;
+	public int score = 0;
 	private ArrayList<String> playerHand = new ArrayList<>(52);
 	private int numCardsInHand = 0;
+	private boolean isRoundOverVal = false;
 	
 	static Client clientConnection;
 
@@ -72,7 +68,7 @@ public class Player implements Serializable {
 		//players = clientConnection.receivePlayer();
 		clientConnection.receiveInitalHand();
 		printPlayerHand();
-		while (true) {
+		while (!isRoundOverVal) {
 			GameMessage newTurnMessage = clientConnection.receiveNewTurnMessage();
 			newTurnMessage.printGameMessage();
 			printPlayerHand();
@@ -80,7 +76,7 @@ public class Player implements Serializable {
 			
 			//if top card was a 2
 			if (currentState == 3) {
-				playerHand.add("2D");
+				//playerHand.add("2D");
 				printPlayerHand();
 				String topCard2Case = newTurnMessage.getTopCard();
 				String newSuit2Case = clientConnection.receiveNewSuit();
@@ -130,6 +126,7 @@ public class Player implements Serializable {
 					clientConnection.sendIsNewCard(0);
 					clientConnection.sendNewTopCard(playedCard);
 					clientConnection.sendNewSuit(newSuit2Case);
+					isRoundOverVal = isRoundOver();
 					
 				}
 				//make them draw and play their turn
@@ -141,23 +138,44 @@ public class Player implements Serializable {
 					//now play regular turn
 					//printPlayerHand();
 					playNormalTurn(topCard2Case,"");
+					isRoundOverVal = isRoundOver();
 				}
 			}
 			//play a normal round there was no special case in the last round
 			else if (currentState == 1) {
-				playerHand.add("2S");
+				//playerHand.add("2S");
 				String newSuit = clientConnection.receiveNewSuit();
 				String topCard = newTurnMessage.getTopCard();
 				playNormalTurn(topCard, newSuit);
+				isRoundOverVal = isRoundOver();
 
 				
 			}
 			else if(currentState == 2) {
 				System.out.println("Last player played a queen! Your turn is being Skipped");
+				clientConnection.sendRoundOverState(0);
 			}
 			else if(currentState == 0) {
 				//do nothing as you are not playing this turn
+				System.out.println("Do nothing, not your turn");
 			}
+			//another player has won, calculate your score and send it to the sever
+			else if (currentState == 4) {
+				calculateRoundScore();
+				clientConnection.sendLoserScore();
+				break;
+			}
+			
+//			//this player has emptied their hand and won this round
+//			if (playerHand.size() == 0) {
+//				//send a state to the server saying that round is over
+//				clientConnection.sendRoundOverState(1);
+//				break;    //break out of turn loop
+//			}
+//			else {
+//				//send state to server saying that round is not over
+//				clientConnection.sendRoundOverState(0);
+//			}
 			
 		}
 
@@ -288,6 +306,40 @@ public class Player implements Serializable {
     		return true;
     	}
     	return false;
+    }
+    
+    public void calculateRoundScore () {
+    	int tempScore = 0;
+    	for (int i = 0; i < playerHand.size(); i++) {
+    		String currentCard = playerHand.get(i);
+    		if (currentCard.charAt(0) == 'K') {tempScore += 10;}
+    		else if (currentCard.charAt(0) == 'Q') {tempScore += 10;}
+    		else if (currentCard.charAt(0) == 'J') {tempScore += 10;}
+    		else if (currentCard.length() == 3 && currentCard.charAt(0) == '1' && currentCard.charAt(1) == '0') {tempScore += 10;}
+    		else if (currentCard.charAt(0) == '8') {tempScore += 50;}
+    		else {
+    			System.out.println("Adding " + (int) currentCard.charAt(0) + " for " + currentCard);
+    			tempScore += Character.getNumericValue(currentCard.charAt(0));
+    			}
+    		System.out.println("Score in Loop: " + tempScore);
+    	}
+    	System.out.println(name + " Score is calcualted to being " + tempScore);
+    	score += tempScore;
+    	System.out.println(name + " Score is calcualted to being (ACTUAL)" + score);
+    }
+    
+    public boolean isRoundOver() {
+		//this player has emptied their hand and won this round
+		if (playerHand.size() == 0) {
+			//send a state to the server saying that round is over
+			clientConnection.sendRoundOverState(1);
+			return true;    //break out of turn loop
+		}
+		else {
+			//send state to server saying that round is not over
+			clientConnection.sendRoundOverState(0);
+			return false;
+		}
     }
     
     public void playNormalTurn(String topCard, String newSuit) {
@@ -449,14 +501,14 @@ public class Player implements Serializable {
 		public void receiveInitalHand() {
 			System.out.println("Receiving the intial hand");
 			try {
-				for (int i = 0; i < 5; i++) {
+				for (int i = 0; i < 2; i++) {
 					addCard(dIn.readUTF());
 				}
 			System.out.println("FINSIHED RECEVING INITIAL HAND");
 
 			} 
 			catch (IOException e) {
-				System.out.println("Score sheet not received");
+				System.out.println("intial hand not received");
 				e.printStackTrace();
 			}
 		}
@@ -616,6 +668,28 @@ public class Player implements Serializable {
 			catch (IOException e) {
 				System.out.println("2 Case drawn cards not received");
 				e.printStackTrace();
+			}
+		}
+		
+		public void sendRoundOverState(int state) {
+			System.out.println("Sending the round over state");
+			try {
+				dOut.writeInt(state);
+				dOut.flush();
+			} catch (IOException ex) {
+				System.out.println("Round over state NOT SENT");
+				ex.printStackTrace();
+			}
+		}
+		
+		public void sendLoserScore() {
+			System.out.println("Sending the Loser Score");
+			try {
+				dOut.writeInt(score);
+				dOut.flush();
+			} catch (IOException ex) {
+				System.out.println("Loser score NOT SENT");
+				ex.printStackTrace();
 			}
 		}
 	}

@@ -27,7 +27,7 @@ public class GameServer implements Serializable {
 	int numPlayers;
 	
 	//new variables added
-	CardDeck gameDeck = new CardDeck();
+	CardDeck gameDeck;
 	boolean directionCC = true;        //clockwise direction of play by default
 	boolean skipNextTurn = false;      //to handle case of queen
 	boolean twoCase = false;           //to handle if last card was 2
@@ -38,6 +38,8 @@ public class GameServer implements Serializable {
 	int gameNum = 0;
 	int currentPlayerTurnIndex = 0;
 	String newSuit = "";                      //used for when an 8 is played
+	int roundStartedIndex = 0;
+	String currentRoundWinner = "";
 	//GameMessage message = new GameMessage();
 
 	public static void main(String args[]) throws Exception {
@@ -101,10 +103,17 @@ public class GameServer implements Serializable {
 			System.out.println("Could not connect 4 players");
 		}
 	}
-
 	public void gameLoop() {
+		while(!isGameOver()) {
+			roundLoop();
+		}
+		
+	}
+
+	public void roundLoop() {
 		//first look to send a player their cards
-		for (int x = 0; x < 5; x++) {
+		gameDeck = new CardDeck();
+		for (int x = 0; x < 2; x++) {
 			for(int y = 0; y < players.length; y++) {
 				players[y].addCard(takeCardFromTopOfDeck());
 			}
@@ -172,12 +181,6 @@ public class GameServer implements Serializable {
 						}
 						playerServer[currentPlayerTurnIndex].sendDrawn2CaseCards(drawnCards2Case);
 						
-						//updateServerInfoAfterPlayerTurn();
-						
-						
-						
-						
-						
 						int drawCardState = playerServer[currentPlayerTurnIndex].receiveDrawCardState();
 						
 						if (drawCardState == 0) {
@@ -234,15 +237,40 @@ public class GameServer implements Serializable {
 					
 				}
 				
+				System.out.println("Getting round overState");
+				int roundOverState = playerServer[currentPlayerTurnIndex].receiveRoundOverState();
+				
 				//send not your turn state to remaining players
-				for (int i = 0; i < players.length; i++) {
-					if (i != currentPlayerTurnIndex) {
-						playerServer[i].sendStartTurnState(0);
+				if (roundOverState == 0) {
+					System.out.println("SEnding that the round will continute state");
+					for (int i = 0; i < players.length; i++) {
+						if (i != currentPlayerTurnIndex) {
+							playerServer[i].sendStartTurnState(0);
+						}
 					}
 				}
+				else if (roundOverState == 1) {
+					currentRoundWinner = players[currentPlayerTurnIndex].name;
+					for (int i = 0; i < players.length; i++) {
+						if (i != currentPlayerTurnIndex) {
+							//tell players to send back their scores
+							playerServer[i].sendStartTurnState(4);
+							int playerNewScore = playerServer[i].receiveUpdatedPlayerScore();
+							players[i].score = playerNewScore;
+						}
+					}
+					
+					System.out.println("SCORES FOR PLAYERS AFTER ROUND 1");
+					for (int i = 0; i < players.length; i++) {
+						System.out.println(players[i].name + " : " + players[i].score);
+					}
+					System.out.println("The winner of the round is: " + currentRoundWinner);
+					isWinner = true;
+				}
+				
 				updateCurrentPlayerIndex();
 			} 
-
+			System.out.println("GAME LOOP ENDED");
 
 	}
 	
@@ -341,6 +369,29 @@ public class GameServer implements Serializable {
     		return true;
     	}
     	return false;
+    }
+    
+    public boolean isGameOver () {
+    	boolean playerBust = false;
+    	for (int i = 0; i < players.length; i++) {
+    		if (players[0].score >= 100) {
+    			playerBust = true;
+    			System.out.println("END THE GAME, A PLAYER HAS OVER 100 POINTS");
+    		}
+    	}
+    	return playerBust;
+    }
+    
+    public String getGameWinner() {
+    	String winner = "";
+    	int lowestScore = -1;
+    	for (int i = 0; i < players.length; i++) {
+    		if (players[0].score < lowestScore) {
+    			winner = players[i].name;
+    			lowestScore = players[i].score;
+    		}
+    	}
+    	return winner;
     }
 
 	public class Server implements Runnable {
@@ -455,12 +506,13 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendStartTurnState(int state) {
+			System.out.println("Sending start turn State");
 			try {
 				dOut.writeInt(state);
 				dOut.flush();
 			}
 			catch (Exception e) {
-				System.out.println("Could not send State to current player");
+				System.out.println("Could not send start turn State to current player");
 				e.printStackTrace();
 			}
 		}
@@ -490,12 +542,13 @@ public class GameServer implements Serializable {
 		}
 		
 		public void sendNewSuit() {
+			System.out.println("Sending New suit to current player");
 			try {
 				dOut.writeUTF(newSuit);
 				dOut.flush();
 			}
 			catch (Exception e) {
-				System.out.println("Could not send NewState to current player");
+				System.out.println("Could not send New suit to current player");
 				e.printStackTrace();
 			}
 		}
@@ -575,6 +628,30 @@ public class GameServer implements Serializable {
 				System.out.println("Could not send the 2 case drawn cards");
 				e.printStackTrace();
 			}
+		}
+		
+		public int receiveRoundOverState() {
+			System.out.println("Receieving State of round over from current Player");
+			try {
+				return (int) dIn.readInt();
+			}
+			catch (Exception e) {
+				System.out.println("Could not receive State of round over from Player");
+				e.printStackTrace();
+			}
+			return 0;
+		}
+		
+		public int receiveUpdatedPlayerScore() {
+			System.out.println("Receieving score of a losing Player");
+			try {
+				return (int) dIn.readInt();
+			}
+			catch (Exception e) {
+				System.out.println("Could not receive score of a losing Player");
+				e.printStackTrace();
+			}
+			return 0;
 		}
 		
 	}
