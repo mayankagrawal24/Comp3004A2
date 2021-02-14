@@ -1,5 +1,5 @@
 
-//package com.a1.yahtzeeGame;
+package test;
 
 import java.io.Serializable;
 import java.util.ArrayList;

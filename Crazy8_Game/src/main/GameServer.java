@@ -1,4 +1,4 @@
-//package com.a1.yahtzeeGame;
+package main;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -24,7 +24,7 @@ public class GameServer implements Serializable {
 
 	ServerSocket ss;
 
-	Game game = new Game();
+	//Game game = new Game();
 	int numPlayers;
 	
 	//new variables added
@@ -171,7 +171,7 @@ public class GameServer implements Serializable {
 		twoCaseNumCards = 0;
 		isWinner = false;
 		gameDeck = new CardDeck();
-		for (int x = 0; x < 2; x++) {
+		for (int x = 0; x < 5; x++) {
 			for(int y = 0; y < players.length; y++) {
 				players[y].addCard(takeCardFromTopOfDeck());
 			}
@@ -437,7 +437,7 @@ public class GameServer implements Serializable {
     public boolean isGameOver () {
     	boolean playerBust = false;
     	for (int i = 0; i < players.length; i++) {
-    		if (players[i].score >= 50) {
+    		if (players[i].score >= 100) {
     			playerBust = true;
     			System.out.println("END THE GAME, A PLAYER HAS OVER 100 POINTS");
     		}

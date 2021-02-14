@@ -1,4 +1,4 @@
-//package com.a1.yahtzeeGame;
+package main;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,7 +21,7 @@ public class Player implements Serializable {
 	int playerId = 0;
 	String suits[] = {"H", "S", "D", "C"};
 
-	Game game = new Game();
+	//Game game = new Game();
 	
 	//new variables needed for each player
 	public int score = 0;
@@ -515,7 +515,7 @@ public class Player implements Serializable {
 		public void receiveInitalHand() {
 			//System.out.println("Receiving the intial hand");
 			try {
-				for (int i = 0; i < 2; i++) {
+				for (int i = 0; i < 5; i++) {
 					addCard(dIn.readUTF());
 				}
 			//System.out.println("FINSIHED RECEVING INITIAL HAND");
