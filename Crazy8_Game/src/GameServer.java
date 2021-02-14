@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.Scanner;
 
 public class GameServer implements Serializable {
 
@@ -104,14 +105,70 @@ public class GameServer implements Serializable {
 		}
 	}
 	public void gameLoop() {
-		while(!isGameOver()) {
+		int roundCounter = 0;
+		while(true) {
+			roundCounter++;
 			roundLoop();
+			//send the winner & scores to the players
+			String roundOverMsg = "";
+			roundOverMsg += ("SCORES FOR PLAYERS AFTER ROUND" + roundCounter + "\n");
+			for (int i = 0; i < players.length; i++) {
+				roundOverMsg +=(players[i].name + " : " + players[i].score);
+				roundOverMsg += "\n";
+			}
+			roundOverMsg += ("The winner of the round is: " + currentRoundWinner);
+			
+			for (int i = 0; i < players.length; i++) {
+				playerServer[i].sendRoundOverMsg(roundOverMsg);
+			}
+			System.out.println("Finished sending round over MSGs");
+			
+			//tell players if there is another round 
+			if (isGameOver()) {
+				// tell the player to stop looping and display the game winner
+				for (int i = 0; i < players.length; i++) {
+					System.out.println("SENT ROUND STATE OF 1");
+					playerServer[i].sendNewRoundState(1);
+				}
+				String winner = getGameWinner();
+				String gameOverMsg = "";
+				gameOverMsg += ("SCORES FOR PLAYERS AFTER GAME\n");
+				for (int i = 0; i < players.length; i++) {
+					gameOverMsg +=(players[i].name + " : " + players[i].score);
+					gameOverMsg += "\n";
+				}
+				
+				roundOverMsg += ("The winner of the Game is: " + winner);
+				System.out.println(roundOverMsg);
+				for (int i = 0; i < players.length; i++) {
+					playerServer[i].sendGameOverMsg(gameOverMsg);
+				}
+				break;
+				
+			}
+			else {
+				//tell player to play another round
+				for (int i = 0; i < players.length; i++) {
+					System.out.println("SENT ROUND STATE OF 0");
+					playerServer[i].sendNewRoundState(0);
+					players[i].clearPlayerHand();
+				}
+			}
+			roundStartedIndex ++;
+			//break;
 		}
 		
 	}
 
 	public void roundLoop() {
 		//first look to send a player their cards
+		Scanner input = new Scanner(System.in);
+		currentPlayerTurnIndex = roundStartedIndex;
+		directionCC = true;
+		skipNextTurn = false;
+		twoCase = false;
+		twoCaseNumCards = 0;
+		isWinner = false;
 		gameDeck = new CardDeck();
 		for (int x = 0; x < 2; x++) {
 			for(int y = 0; y < players.length; y++) {
@@ -119,11 +176,12 @@ public class GameServer implements Serializable {
 			}
 		}
 			System.out.println("SERVER SENDING HANDS TO PLAYERS");
+			//int choicdsddssd = input.nextInt();
 			playerServer[0].sendInitalHand(players[0]);
 			playerServer[1].sendInitalHand(players[1]);
 			playerServer[2].sendInitalHand(players[2]);
 			playerServer[3].sendInitalHand(players[3]);
-
+			System.out.println("Sent all inital Hands");
 			
 			//generate the top card to start play and make sure it is not 2
 	        do {
@@ -137,7 +195,10 @@ public class GameServer implements Serializable {
 	            }
 	        } while (topCard.charAt(0) == '8');
 	        //topCard = "QH";
+	        
+	        
 	        System.out.println("THE STARTING TOP card is: " + topCard);
+	        //choicdsddssd = input.nextInt();
 			while (!isWinner) {
 
 				turnsMade++;
@@ -150,7 +211,6 @@ public class GameServer implements Serializable {
 				
 				//send the turn info to all players
 				for (int i = 0; i < players.length; i++) {
-					//message.setGameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr());
 					playerServer[i].sendNewTurnMessage(new GameMessage(this.topCard, players[currentPlayerTurnIndex].name, currentDirectionStr(), newSuit));
 				}
 				
@@ -254,6 +314,7 @@ public class GameServer implements Serializable {
 					for (int i = 0; i < players.length; i++) {
 						if (i != currentPlayerTurnIndex) {
 							//tell players to send back their scores
+							System.out.println("SENDING END ROUND STATE TO NOT YOUR TURN PLAYERS " + i);
 							playerServer[i].sendStartTurnState(4);
 							int playerNewScore = playerServer[i].receiveUpdatedPlayerScore();
 							players[i].score = playerNewScore;
@@ -266,11 +327,12 @@ public class GameServer implements Serializable {
 					}
 					System.out.println("The winner of the round is: " + currentRoundWinner);
 					isWinner = true;
+					break;
 				}
 				
 				updateCurrentPlayerIndex();
 			} 
-			System.out.println("GAME LOOP ENDED");
+			System.out.println("Round LOOP ENDED");
 
 	}
 	
@@ -335,7 +397,7 @@ public class GameServer implements Serializable {
 			twoCase = true;
 			twoCaseNumCards += 2;
 		}
-		else if(newTopCard.charAt(0) != '2') {
+		else if(newTopCard.charAt(0) != '2' || isNewCard == 1) {
 			twoCase = false;
 			twoCaseNumCards = 0;
 		}
@@ -374,7 +436,7 @@ public class GameServer implements Serializable {
     public boolean isGameOver () {
     	boolean playerBust = false;
     	for (int i = 0; i < players.length; i++) {
-    		if (players[0].score >= 100) {
+    		if (players[i].score >= 50) {
     			playerBust = true;
     			System.out.println("END THE GAME, A PLAYER HAS OVER 100 POINTS");
     		}
@@ -652,6 +714,42 @@ public class GameServer implements Serializable {
 				e.printStackTrace();
 			}
 			return 0;
+		}
+		
+		public void sendRoundOverMsg(String msg) {
+			System.out.println("Sending the Round over msg");
+			try {
+				dOut.writeUTF(msg);
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send Round over msg");
+				e.printStackTrace();
+			}
+		}
+		
+		public void sendGameOverMsg(String msg) {
+			System.out.println("Sending the Game over msg");
+			try {
+				dOut.writeUTF(msg);
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send Game over msg");
+				e.printStackTrace();
+			}
+		}
+		
+		public void sendNewRoundState(int state) {
+			System.out.println("Sending the New round State");
+			try {
+				dOut.writeInt(state);
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send new Round state");
+				e.printStackTrace();
+			}
 		}
 		
 	}

@@ -62,8 +62,28 @@ public class Player implements Serializable {
 			players[i] = new Player(" ");
 		}
 	}
-
 	public void startGame() {
+		
+		while(true) {
+			startRound();
+			//Receive the winner and scores of the last round
+			System.out.println(clientConnection.receiveRoundWinnerMsg());
+			int newRoundState = clientConnection.receiveNewRoundState();
+			if (newRoundState == 0) {
+				System.out.println("\n\n------- STarting a NEW ROUND ------- \n\n");
+				playerHand.clear();
+			}
+			else if(newRoundState == 1) {
+				System.out.println(clientConnection.receiveGameWinnerMsg());
+				break;
+			}
+			//receive if we want to start another round
+			//deal with the while loop
+		}
+	}
+
+	public void startRound() {
+		isRoundOverVal = false;
 		Scanner input = new Scanner(System.in);
 		//players = clientConnection.receivePlayer();
 		clientConnection.receiveInitalHand();
@@ -127,6 +147,7 @@ public class Player implements Serializable {
 					clientConnection.sendNewTopCard(playedCard);
 					clientConnection.sendNewSuit(newSuit2Case);
 					isRoundOverVal = isRoundOver();
+					if (isRoundOverVal == true) {break;}
 					
 				}
 				//make them draw and play their turn
@@ -139,6 +160,7 @@ public class Player implements Serializable {
 					//printPlayerHand();
 					playNormalTurn(topCard2Case,"");
 					isRoundOverVal = isRoundOver();
+					if (isRoundOverVal == true) {break;}
 				}
 			}
 			//play a normal round there was no special case in the last round
@@ -148,6 +170,7 @@ public class Player implements Serializable {
 				String topCard = newTurnMessage.getTopCard();
 				playNormalTurn(topCard, newSuit);
 				isRoundOverVal = isRoundOver();
+				if (isRoundOverVal == true) {break;}
 
 				
 			}
@@ -165,18 +188,6 @@ public class Player implements Serializable {
 				clientConnection.sendLoserScore();
 				break;
 			}
-			
-//			//this player has emptied their hand and won this round
-//			if (playerHand.size() == 0) {
-//				//send a state to the server saying that round is over
-//				clientConnection.sendRoundOverState(1);
-//				break;    //break out of turn loop
-//			}
-//			else {
-//				//send state to server saying that round is not over
-//				clientConnection.sendRoundOverState(0);
-//			}
-			
 		}
 
 	}
@@ -318,14 +329,16 @@ public class Player implements Serializable {
     		else if (currentCard.length() == 3 && currentCard.charAt(0) == '1' && currentCard.charAt(1) == '0') {tempScore += 10;}
     		else if (currentCard.charAt(0) == '8') {tempScore += 50;}
     		else {
-    			System.out.println("Adding " + (int) currentCard.charAt(0) + " for " + currentCard);
     			tempScore += Character.getNumericValue(currentCard.charAt(0));
     			}
-    		System.out.println("Score in Loop: " + tempScore);
     	}
-    	System.out.println(name + " Score is calcualted to being " + tempScore);
+    	//System.out.println(name + " Score is calcualted to being " + tempScore);
     	score += tempScore;
     	System.out.println(name + " Score is calcualted to being (ACTUAL)" + score);
+    }
+    
+    public void clearPlayerHand() {
+    	playerHand.clear();
     }
     
     public boolean isRoundOver() {
@@ -417,6 +430,7 @@ public class Player implements Serializable {
 					}
 					else {
 						System.out.println("Cannot play any of the drawn Cards! Skipping Turn");
+						newCardPlayed = 1;
 					}
 					clientConnection.sendIsNewCard(newCardPlayed);
 					clientConnection.sendNewTopCard(topCard);
@@ -692,6 +706,47 @@ public class Player implements Serializable {
 				ex.printStackTrace();
 			}
 		}
+		
+		public String receiveRoundWinnerMsg() {
+			System.out.println("\nReceving the round winner MSG");
+			String s = "UNSET";
+			try {
+				
+				return (String) dIn.readUTF();
+			} 
+			catch (IOException e) {
+				System.out.println("round winner MSG not received");
+				e.printStackTrace();
+			}
+			return s;
+		}
+		public String receiveGameWinnerMsg() {
+			System.out.println("\nReceving the GAME winner MSG");
+			String s = "UNSET GW";
+			try {
+				
+				return (String) dIn.readUTF();
+			} 
+			catch (IOException e) {
+				System.out.println("GAME winner MSG not received");
+				e.printStackTrace();
+			}
+			return s;
+		}
+		
+		public int receiveNewRoundState() {
+			System.out.println("\nReceving the new Round State");
+			try {
+				
+				return (int) dIn.readInt();
+			} 
+			catch (IOException e) {
+				System.out.println("round winner MSG not received");
+				e.printStackTrace();
+			}
+			return 0;
+		}
+		
 	}
 
 	/*
