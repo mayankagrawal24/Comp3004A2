@@ -155,8 +155,29 @@ public class GameServer implements Serializable {
 				else {
 					playerServer[currentPlayerTurnIndex].sendStartTurnState(1);
 					playerServer[currentPlayerTurnIndex].sendNewSuit();
-					//add some kind of receive
-					updateServerInfoAfterPlayerTurn();
+					//receiving the draw cards request
+					int drawCardState = playerServer[currentPlayerTurnIndex].receiveDrawCardState();
+					
+					if (drawCardState == 0) {
+						System.out.println("NO REquest to draw");
+						updateServerInfoAfterPlayerTurn();
+					}
+					//handle the draw request from the player.
+					else if(drawCardState == 1) {
+						System.out.println("WANT TO DRAW");
+						ArrayList<String> drawnCards = new ArrayList<String>(3);
+						for (int x = 0; x < 3; x++) {
+							String newCard = takeCardFromTopOfDeck();
+							drawnCards.add(newCard);
+							if (mustPlayCard(newCard, topCard, newSuit)) {
+								break;
+							}
+						}
+						
+						//send the drawn cards to the player
+						playerServer[currentPlayerTurnIndex].sendDrawnCards(drawnCards);
+						updateServerInfoAfterPlayerTurn();
+					}
 					
 				}
 				
@@ -215,25 +236,52 @@ public class GameServer implements Serializable {
     }
     
     public void updateServerInfoAfterPlayerTurn() {
+    	int isNewCard = playerServer[currentPlayerTurnIndex].receiveIsNewCard();
     	String newTopCard = playerServer[currentPlayerTurnIndex].receiveNewTopCard();
 		String updatedNewSuit = playerServer[currentPlayerTurnIndex].receiveNewSuit();
 		System.out.println("The new top card received is " + newTopCard);
 		System.out.println("The new top SUIT received is " + updatedNewSuit);
-		if (newTopCard.charAt(0) == '1' && newTopCard.charAt(1) != '0') {
+		if (newTopCard.charAt(0) == '1' && newTopCard.charAt(1) != '0' && isNewCard == 0) {
 			System.out.println("CHANGING THE DIRECTION");
 			changeDirectionOfPlay();
 		}
 		
-		else if (newTopCard.charAt(0) == 'Q') {
+		else if (newTopCard.charAt(0) == 'Q' && isNewCard == 0) {
 			skipNextTurn = true;
 		}
 		
-		else if (newTopCard.charAt(0) == '2') {
+		else if (newTopCard.charAt(0) == '2' && isNewCard == 0) {
 			
 		}
 		
 		this.topCard = newTopCard;
 		this.newSuit = updatedNewSuit;
+    }
+    
+    public boolean mustPlayCard(String pulledCard, String topCard, String newSuit) {
+    	
+    	if (pulledCard.charAt(0) == '8') {
+    		return true;
+    	}
+    	else if(newSuit != ""  && pulledCard.charAt(pulledCard.length() - 1) == newSuit.charAt(0)) {
+    		return true;
+    	}
+    	//bascially deal with 10
+    	else if (newSuit == "" && (pulledCard.length() == 3 || topCard.length() == 3)) {
+    		if (pulledCard.length() == topCard.length()) {
+    			return true;
+    		}
+    		else if (pulledCard.charAt(pulledCard.length() - 1) == topCard.charAt(topCard.length() - 1)) {
+    			return true;
+    		}
+    		else {
+    			return false;
+    		}
+    	}
+    	else if (newSuit == "" && (pulledCard.charAt(0) == topCard.charAt(0) || pulledCard.charAt(1) == topCard.charAt(1))) {
+    		return true;
+    	}
+    	return false;
     }
 
 	public class Server implements Runnable {
@@ -392,6 +440,46 @@ public class GameServer implements Serializable {
 				e.printStackTrace();
 			}
 		}
+		
+		public int receiveDrawCardState() {
+			System.out.println("Receiving the Draw Card Request from player");
+			try {
+				return (int) dIn.readInt();
+			}
+			catch (Exception e) {
+				System.out.println("Could not receive DRAWCARD STate From current player");
+				e.printStackTrace();
+			}
+			return 0;
+		}
+		
+		public void sendDrawnCards(ArrayList<String> drawnCards) {
+			try {
+				dOut.writeInt(drawnCards.size());
+				for(int i = 0; i < drawnCards.size(); i++) {
+					dOut.writeUTF(drawnCards.get(i));
+				}
+				dOut.flush();
+			}
+			catch (Exception e) {
+				System.out.println("Could not send NewState to current player");
+				e.printStackTrace();
+			}
+		}
+		
+		public int receiveIsNewCard() {
+			System.out.println("Receiving Parameter that a new card was played");
+			try {
+				return (int) dIn.readInt();
+			}
+			catch (Exception e) {
+				System.out.println("Could not receive Parameter that new card was played");
+				e.printStackTrace();
+			}
+			return 0;
+		}
+		
+		
 	}
 
 }
