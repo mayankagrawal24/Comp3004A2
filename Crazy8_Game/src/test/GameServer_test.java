@@ -171,18 +171,42 @@ public class GameServer_test implements Serializable {
 		twoCaseNumCards = 0;
 		isWinner = false;
 		gameDeck = new CardDeck_test();
-		for (int x = 0; x < 5; x++) {
-			for(int y = 0; y < players.length; y++) {
-				players[y].addCard(takeCardFromTopOfDeck());
-			}
-		}
-			//System.out.println("SERVER SENDING HANDS TO PLAYERS");
-			//int choicdsddssd = input.nextInt();
+		
+		//overriding this usual hand out of cards
+//		for (int x = 0; x < 5; x++) {
+//			for(int y = 0; y < players.length; y++) {
+//				players[y].addCard(takeCardFromTopOfDeck());
+//			}
+//		}
+			players[0].addCard("3C");
+			players[0].addCard("1H");
+			players[0].addCard("QC");
+			players[0].addCard("7H");
+			players[0].addCard("5S");
+			
+			players[1].addCard("3H");
+			players[1].addCard("1H");
+			players[1].addCard("QC");
+			players[1].addCard("7H");
+			players[1].addCard("3C");
+			
+			players[2].addCard("3C");
+			players[2].addCard("1H");
+			players[2].addCard("3H");
+			players[2].addCard("7H");
+			players[2].addCard("7S");
+			
+			players[3].addCard("3C");
+			players[3].addCard("1H");
+			players[3].addCard("QC");
+			players[3].addCard("7H");
+			players[3].addCard("9S");
+		
+			//System.out.println("SERVER SENDING HANDS TO PLAYERS")
 			playerServer[0].sendInitalHand(players[0]);
 			playerServer[1].sendInitalHand(players[1]);
 			playerServer[2].sendInitalHand(players[2]);
 			playerServer[3].sendInitalHand(players[3]);
-			//System.out.println("Sent all inital Hands");
 			
 			//generate the top card to start play and make sure it is not 2
 	        do {
@@ -338,7 +362,6 @@ public class GameServer_test implements Serializable {
 	}
 	
     public String takeCardFromTopOfDeck() {
-    	
         //String card = gameDeck.deck.get(0);
     	Scanner cardScanner = new Scanner(System.in);
     	System.out.println("Enter the card you would like to force: ");
