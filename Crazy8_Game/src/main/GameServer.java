@@ -449,7 +449,7 @@ public class GameServer implements Serializable {
     	String winner = "";
     	int lowestScore = 1000;
     	for (int i = 0; i < players.length; i++) {
-    		if (players[0].score < lowestScore) {
+    		if (players[i].score < lowestScore) {
     			winner = players[i].name;
     			lowestScore = players[i].score;
     		}
