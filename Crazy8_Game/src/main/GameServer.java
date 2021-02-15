@@ -139,7 +139,7 @@ public class GameServer implements Serializable {
 					gameOverMsg += "\n";
 				}
 				
-				roundOverMsg += ("The winner of the Game is: " + winner);
+				gameOverMsg += ("\nThe winner of the Game is: " + winner);
 				System.out.println(roundOverMsg);
 				for (int i = 0; i < players.length; i++) {
 					playerServer[i].sendGameOverMsg(gameOverMsg);
