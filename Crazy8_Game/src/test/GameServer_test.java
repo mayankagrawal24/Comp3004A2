@@ -178,25 +178,36 @@ public class GameServer_test implements Serializable {
 //				players[y].addCard(takeCardFromTopOfDeck());
 //			}
 //		}
-			players[0].addCard("KH");
-			players[0].addCard("7C");
-			players[0].addCard("8H");
-			players[0].addCard("5S");
+//			players[0].addCard("KH");
+//			players[0].addCard("7C");
+//			players[0].addCard("8H");
+//			players[0].addCard("5S");
+//			
+//			players[1].addCard("KH");
+//			players[1].addCard("7C");
+//			players[1].addCard("8H");
+//			players[1].addCard("5S");
+//			
+//			players[2].addCard("KH");
+//			players[2].addCard("7C");
+//			players[2].addCard("8H");
+//			players[2].addCard("5S");
+//			
+//			players[3].addCard("KH");
+//			players[3].addCard("7C");
+//			players[3].addCard("8H");
+//			players[3].addCard("5S");
 			
-			players[1].addCard("KH");
-			players[1].addCard("7C");
-			players[1].addCard("8H");
-			players[1].addCard("5S");
-			
-			players[2].addCard("KH");
-			players[2].addCard("7C");
-			players[2].addCard("8H");
-			players[2].addCard("5S");
-			
-			players[3].addCard("KH");
-			players[3].addCard("7C");
-			players[3].addCard("8H");
-			players[3].addCard("5S");
+		//allow for override of starting hand
+			for (int x = 0; x < players.length; x++) {
+				System.out.println("Manually give the starting hand for player " + (x+1));
+				String cards = input.nextLine();
+				String array[] = cards.split(" ");
+				//ArrayList<String> cardsSplit = new ArrayList<String>(array.length);
+				for (int y = 0; y < array.length; y++) {
+					players[x].addCard(array[y]);
+				}
+			}
 
 		
 			//System.out.println("SERVER SENDING HANDS TO PLAYERS")
@@ -551,7 +562,9 @@ public class GameServer_test implements Serializable {
 
 		public void sendInitalHand(Player_test pl) {
 			try {
+				
 				ArrayList<String> tempHand = pl.getHand();
+				dOut.writeInt(tempHand.size());
 				//here send each card to the player thread
 				for (int i = 0; i < tempHand.size(); i++) {
 					dOut.writeUTF(tempHand.get(i));;

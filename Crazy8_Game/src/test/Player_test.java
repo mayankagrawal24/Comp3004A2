@@ -515,7 +515,8 @@ public class Player_test implements Serializable {
 		public void receiveInitalHand() {
 			//System.out.println("Receiving the intial hand");
 			try {
-				for (int i = 0; i < 4; i++) {
+				int numCards = (int) dIn.readInt();
+				for (int i = 0; i < numCards; i++) {
 					addCard(dIn.readUTF());
 				}
 			//System.out.println("FINSIHED RECEVING INITIAL HAND");
