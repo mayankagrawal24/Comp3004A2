@@ -2,7 +2,7 @@ Crazy 8s Networked Game
 This project is an implementation of the classic Crazy 8s card game with networked multiplayer functionality. The game allows up to four players to connect and play in real-time over a network using UDP networking for communication.
 
 # Features
-Multiplayer Gameplay: Supports up to four players in an online session.
+* Multiplayer Gameplay: Supports up to four players in an online session.
 UDP Networking: Utilizes UDP sockets for fast and efficient communication between clients and the server.
 Turn-Based Mechanics: Handles player turns, enforcing game rules such as wild cards, draw twos, and skips.
 Game State Management: Tracks player actions, scores, and game progression.
